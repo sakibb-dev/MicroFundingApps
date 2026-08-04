@@ -95,8 +95,8 @@ Kenapa `app/backend` dan `app/frontend` (bukan `backend/` `frontend/` langsung d
 
 ## Yang belum ada / technical debt untuk dev berikutnya
 
-- **Tidak ada automated test untuk endpoint API** — baru ada `phpunit.xml` bawaan Laravel, belum ada test case untuk controller/service. `ProfitSharingCalculatorService` paling prioritas untuk di-test karena isolasinya sudah bagus (pure function).
-- **Tidak ada CI/CD** — belum ada GitHub Actions untuk lint/test otomatis saat PR.
+- **Test coverage masih tipis** — sudah ada beberapa test (`tests/Unit/ProfitSharingCalculatorServiceTest.php`, `tests/Feature/InvestmentFlowTest.php`, `tests/Feature/ProfitReportApprovalTest.php`) yang menutup jalur kritis (kalkulasi bagi hasil, alur investasi, approval pengajuan bagi hasil), tapi belum ada test untuk sebagian besar controller lain (KYC, review UMKM, notifikasi, dll) maupun test frontend sama sekali.
+- **Tidak ada CI/CD** — belum ada GitHub Actions untuk jalankan `composer test` / lint otomatis saat PR.
 - **File storage masih `local` disk** (`FILESYSTEM_DISK=local` di `.env`) — untuk produksi (dokumen KTP, NIB, dll adalah data sensitif) sebaiknya pindah ke S3 atau setara sebelum go-live, bukan cuma untuk prototype/pitching.
 - **PDF invoice** (`InvoiceGeneratorService`) — cek isinya sebelum demo yang butuh fitur ini, belum diverifikasi end-to-end di audit ini.
 - **Queue worker** (`QUEUE_CONNECTION=database`) perlu `php artisan queue:listen` jalan terpisah kalau ada job yang di-dispatch (misal notifikasi/email) — jangan lupa saat deploy.
