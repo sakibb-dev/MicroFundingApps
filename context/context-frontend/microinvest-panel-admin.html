@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MicroInvest — Panel Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --teal-900:#04342C;--teal-800:#085041;--teal-700:#0F6E56;--teal-500:#1D9E75;
+    --teal-300:#5DCAA5;--teal-100:#9FE1CB;--teal-50:#E1F5EE;
+    --neutral-900:#111827;--neutral-700:#374151;--neutral-500:#6B7280;--neutral-300:#D1D5DB;
+    --neutral-100:#F3F4F6;--neutral-50:#F9FAFB;--white:#FFFFFF;
+    --success:#10B981;--danger:#EF4444;--warning:#F59E0B;
+    --font:'Inter',system-ui,sans-serif;--radius:10px;--radius-lg:14px;
+  }
+  .ti{font-size:16px;line-height:1}
+  body{font-family:var(--font);background:var(--neutral-50);color:var(--neutral-900);line-height:1.55}
+  a{text-decoration:none;color:inherit}
+  .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+  /* SIDEBAR - light, matches Panel UMKM */
+  .sidebar{background:#fff;border-right:1px solid var(--neutral-100);padding:18px 12px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  .side-logo{display:flex;align-items:center;gap:8px;padding:6px 8px 20px}
+  .side-logo-mark{width:26px;height:26px;background:var(--teal-800);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#fff}
+  .side-logo-text{font-size:14px;font-weight:700;color:var(--neutral-900)}
+  .side-logo-badge{font-size:9.5px;font-weight:700;color:var(--teal-700);background:var(--teal-50);padding:2px 7px;border-radius:99px;margin-left:auto}
+  .side-nav{display:flex;flex-direction:column;gap:2px;flex:1}
+  .side-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--neutral-500);cursor:pointer}
+  .side-item:hover{background:var(--neutral-50)}
+  .side-item.active{background:var(--teal-50);color:var(--teal-800);font-weight:700}
+  .side-icon{width:16px;text-align:center;font-size:14px;display:inline-flex;align-items:center;justify-content:center}
+  .side-notif{margin-left:auto;background:var(--danger);color:#fff;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:99px}
+  .side-item.active .side-notif{background:var(--teal-800);color:#fff}
+  .side-user{border-top:1px solid var(--neutral-100);padding-top:14px;margin-top:10px;display:flex;align-items:center;gap:10px}
+  .side-user-avatar{width:32px;height:32px;border-radius:50%;background:var(--teal-800);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+  .side-user-name{font-size:12.5px;font-weight:600;color:var(--neutral-900)}
+  .side-user-status{font-size:10.5px;color:var(--teal-700)}
+
+  .main{padding:26px 36px;max-width:1220px}
+  .page{display:none}
+  .page.active{display:block}
+  .page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+  .page-title{font-size:22px;font-weight:800;letter-spacing:-.4px}
+  .page-sub{font-size:13px;color:var(--neutral-500);margin-top:2px}
+
+  .btn{border:none;cursor:pointer;font-family:var(--font);border-radius:8px;font-weight:600;transition:all .15s}
+  .btn-primary{background:var(--teal-800);color:#fff;padding:9px 18px;font-size:13px}
+  .btn-primary:hover{background:var(--teal-700)}
+  .btn-outline{background:transparent;border:1.5px solid var(--teal-800);color:var(--teal-800);padding:8px 16px;font-size:12.5px}
+  .btn-danger{background:transparent;border:1.5px solid var(--danger);color:var(--danger);padding:8px 16px;font-size:12.5px}
+  .btn-sm{padding:6px 12px;font-size:12px}
+
+  .card{background:#fff;border:1px solid var(--neutral-100);border-radius:var(--radius-lg);padding:18px 20px}
+  .badge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px}
+  .badge-green{background:var(--teal-50);color:var(--teal-800)}
+  .badge-amber{background:#FEF3C7;color:#92400E}
+  .badge-red{background:#FEE2E2;color:#991B1B}
+  .badge-gray{background:var(--neutral-100);color:var(--neutral-500)}
+
+  /* ALERT */
+  .alert-row{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+  .alert-item{flex:1;min-width:220px;display:flex;align-items:center;gap:10px;background:#FEF2F2;border:1px solid #FECACA;border-radius:var(--radius);padding:12px 16px}
+  .alert-item.amber{background:#FFFBEB;border-color:#FDE68A}
+  .alert-icon{font-size:16px}
+  .alert-text{font-size:12.5px;color:var(--neutral-700);flex:1}
+  .alert-text strong{display:block;font-size:13.5px;color:var(--neutral-900)}
+
+  /* METRIC */
+  .metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+  .metric-card{background:#fff;border:1px solid var(--neutral-100);border-radius:var(--radius-lg);padding:16px 18px}
+  .metric-label{font-size:12px;color:var(--neutral-500);margin-bottom:6px}
+  .metric-val{font-size:21px;font-weight:800}
+  .metric-val.teal{color:var(--teal-700)}
+  .metric-val.red{color:var(--danger)}
+  .metric-val.amber{color:var(--warning)}
+
+  .section-h{font-size:15px;font-weight:700;margin:24px 0 12px}
+  table.data-table{width:100%;border-collapse:collapse;font-size:13px}
+  table.data-table th{text-align:left;font-size:11px;color:var(--neutral-500);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--neutral-100)}
+  table.data-table td{padding:11px 10px;border-bottom:1px solid var(--neutral-100)}
+
+  .filter-tabs{display:flex;gap:6px;margin-bottom:16px}
+  .ftab{padding:7px 16px;border-radius:99px;font-size:12.5px;font-weight:600;border:1px solid var(--neutral-300);color:var(--neutral-700);cursor:pointer;background:#fff}
+  .ftab.active{background:var(--teal-800);border-color:var(--teal-800);color:#fff}
+  .search-row{display:flex;gap:10px;margin-bottom:16px}
+  .search-row input{flex:1;padding:9px 14px;border:1px solid var(--neutral-300);border-radius:8px;font-size:13px;font-family:var(--font);outline:none}
+
+  /* REVIEW PANEL */
+  .review-panel{margin-top:16px}
+  .review-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .doc-viewer{background:var(--neutral-100);border-radius:var(--radius);height:140px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--neutral-500);flex-direction:column;gap:6px}
+  .doc-viewer span{font-size:22px}
+  .info-mini{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+  .info-mini-item{font-size:12.5px}
+  .info-mini-item span{color:var(--neutral-500);display:block;font-size:11px}
+  textarea.review-note{width:100%;padding:10px 12px;border:1px solid var(--neutral-300);border-radius:8px;font-family:var(--font);font-size:13px;outline:none;margin:10px 0}
+  .review-actions{display:flex;gap:10px;margin-top:10px}
+  .reject-form{display:none;margin-top:12px;padding:12px;background:#FEF2F2;border-radius:8px}
+  .reject-form.show{display:block}
+
+  @media(max-width:1000px){
+    .app{grid-template-columns:1fr}
+    .sidebar{display:none}
+    .metric-grid,.review-grid,.info-mini{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="side-logo">
+      <div class="side-logo-mark">M</div>
+      <span class="side-logo-text">MicroInvest</span>
+      <span class="side-logo-badge">ADMIN</span>
+    </div>
+    <div class="side-nav">
+      <div class="side-item active" onclick="showPage('dashboard', this)"><span class="side-icon"><i class="ti ti-layout-dashboard"></i></span>Dashboard</div>
+      <div class="side-item" onclick="showPage('kyc', this)"><span class="side-icon"><i class="ti ti-id-badge-2"></i></span>Manajemen KYC<span class="side-notif">5</span></div>
+      <div class="side-item" onclick="showPage('umkm', this)"><span class="side-icon"><i class="ti ti-building-store"></i></span>Manajemen UMKM<span class="side-notif">2</span></div>
+      <div class="side-item" onclick="showPage('transaksi', this)"><span class="side-icon"><i class="ti ti-arrows-exchange"></i></span>Transaksi<span class="side-notif">8</span></div>
+      <div class="side-item" onclick="showPage('bagihasil', this)"><span class="side-icon"><i class="ti ti-currency-dollar"></i></span>Bagi Hasil<span class="side-notif">3</span></div>
+      <div class="side-item" onclick="showPage('laporan', this)"><span class="side-icon"><i class="ti ti-report"></i></span>Laporan</div>
+    </div>
+    <div class="side-user">
+      <div class="side-user-avatar">AD</div>
+      <div><div class="side-user-name">Admin Utama</div><div class="side-user-status">Super Admin</div></div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- ============ DASHBOARD ============ -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header"><div><div class="page-title">Dashboard Admin</div><div class="page-sub">Overview metrik platform MicroInvest</div></div></div>
+
+      <div class="alert-row">
+        <div class="alert-item"><span class="alert-icon"><i class="ti ti-id-badge-2"></i></span><div class="alert-text"><strong>5 KYC investor</strong>menunggu review</div><button class="btn btn-sm btn-outline" onclick="showPage('kyc',null);setActiveSide('kyc')">Review</button></div>
+        <div class="alert-item amber"><span class="alert-icon"><i class="ti ti-credit-card"></i></span><div class="alert-text"><strong>8 bukti transfer</strong>menunggu konfirmasi</div><button class="btn btn-sm btn-outline" onclick="showPage('transaksi',null);setActiveSide('transaksi')">Review</button></div>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card"><div class="metric-label">Total UMKM Aktif</div><div class="metric-val">47</div></div>
+        <div class="metric-card"><div class="metric-label">Total Investor Terverifikasi</div><div class="metric-val">3.240</div></div>
+        <div class="metric-card"><div class="metric-label">Dana Beredar</div><div class="metric-val teal">Rp 2.4M</div></div>
+      </div>
+      <div class="metric-grid">
+        <div class="metric-card"><div class="metric-label">Pending KYC</div><div class="metric-val amber">5</div></div>
+        <div class="metric-card"><div class="metric-label">Pending Konfirmasi Transfer</div><div class="metric-val red">8</div></div>
+        <div class="metric-card"><div class="metric-label">Fee Platform Bulan Ini</div><div class="metric-val teal">Rp 24.500.000</div></div>
+      </div>
+
+      <div class="section-h">Aktivitas terbaru</div>
+      <div class="card">
+        <table class="data-table">
+          <tr><th>Waktu</th><th>Tipe</th><th>Subjek</th><th>Status</th></tr>
+          <tr><td>2 jam lalu</td><td>KYC baru</td><td>Farid Hidayat</td><td><span class="badge badge-amber">Pending</span></td></tr>
+          <tr><td>3 jam lalu</td><td>Investasi baru</td><td>Rp 2jt ke Warung Bu Sari</td><td><span class="badge badge-amber">Pending</span></td></tr>
+          <tr><td>5 jam lalu</td><td>Pengajuan bagi hasil</td><td>Konveksi Maju Jaya</td><td><span class="badge badge-amber">Review</span></td></tr>
+          <tr><td>1 hari lalu</td><td>UMKM baru daftar</td><td>Sate Klathak Pak Bowo</td><td><span class="badge badge-green">Approved</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ KYC ============ -->
+    <div class="page" id="page-kyc">
+      <div class="page-header"><div><div class="page-title">Manajemen KYC Investor</div><div class="page-sub">Review dokumen dan verifikasi identitas</div></div></div>
+      <div class="filter-tabs">
+        <div class="ftab active">Semua</div><div class="ftab">Pending (5)</div><div class="ftab">Approved</div><div class="ftab">Ditolak</div>
+      </div>
+      <div class="search-row"><input placeholder="Cari nama atau email investor..."></div>
+      <div class="card">
+        <table class="data-table">
+          <tr><th>Nama</th><th>Email</th><th>Tgl Daftar</th><th>Status</th><th>Aksi</th></tr>
+          <tr><td>Farid Hidayat</td><td>farid.h@email.com</td><td>25 Nov 2024</td><td><span class="badge badge-amber">Pending</span></td><td><button class="btn btn-sm btn-outline" onclick="toggleReview()">Review</button></td></tr>
+          <tr><td>Nabila Putri</td><td>nabila.p@email.com</td><td>24 Nov 2024</td><td><span class="badge badge-amber">Pending</span></td><td><button class="btn btn-sm btn-outline">Review</button></td></tr>
+          <tr><td>Rendra Kusuma</td><td>rendra.k@email.com</td><td>20 Nov 2024</td><td><span class="badge badge-green">Approved</span></td><td><button class="btn btn-sm btn-outline">Lihat</button></td></tr>
+          <tr><td>Wahyu Setiawan</td><td>wahyu.s@email.com</td><td>18 Nov 2024</td><td><span class="badge badge-red">Ditolak</span></td><td><button class="btn btn-sm btn-outline">Lihat</button></td></tr>
+        </table>
+      </div>
+
+      <div class="review-panel card" id="review-kyc" style="display:none">
+        <div class="section-h" style="margin-top:0">Review — Farid Hidayat</div>
+        <div class="info-mini">
+          <div class="info-mini-item"><span>Nama lengkap</span>Farid Hidayat</div>
+          <div class="info-mini-item"><span>Email</span>farid.h@email.com</div>
+          <div class="info-mini-item"><span>No. HP</span>0813-2233-4455</div>
+          <div class="info-mini-item"><span>Alamat</span>Jl. Kaliurang KM 5, Yogyakarta</div>
+        </div>
+        <div class="review-grid">
+          <div class="doc-viewer"><span><i class="ti ti-id-badge-2" style="font-size:22px"></i></span>KTP</div>
+          <div class="doc-viewer"><span><i class="ti ti-camera-selfie" style="font-size:22px"></i></span>Selfie + KTP</div>
+        </div>
+        <label style="font-size:12.5px;font-weight:600">Catatan admin</label>
+        <textarea class="review-note" rows="3" placeholder="Catatan review (opsional)"></textarea>
+        <div class="review-actions">
+          <button class="btn btn-danger" onclick="showRejectForm()">Tolak</button>
+          <button class="btn btn-primary" onclick="alert('KYC Farid Hidayat telah diapprove.')">Approve</button>
+        </div>
+        <div class="reject-form" id="reject-kyc">
+          <label style="font-size:12.5px;font-weight:600">Alasan penolakan</label>
+          <textarea class="review-note" rows="2" placeholder="Contoh: foto KTP buram, tidak dapat diverifikasi"></textarea>
+          <button class="btn btn-danger" onclick="alert('KYC ditolak dan email pemberitahuan telah dikirim.')">Kirim Penolakan</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MANAJEMEN UMKM ============ -->
+    <div class="page" id="page-umkm">
+      <div class="page-header"><div><div class="page-title">Manajemen UMKM</div><div class="page-sub">Review pendaftaran usaha baru</div></div></div>
+      <div class="filter-tabs">
+        <div class="ftab active">Semua</div><div class="ftab">Pending (2)</div><div class="ftab">Approved</div><div class="ftab">Ditolak</div>
+      </div>
+      <div class="card">
+        <table class="data-table">
+          <tr><th>Nama Usaha</th><th>Kategori</th><th>Target Dana</th><th>Status</th><th>Aksi</th></tr>
+          <tr><td>Sate Klathak Pak Bowo</td><td>Kuliner</td><td>Rp 25.000.000</td><td><span class="badge badge-amber">Pending</span></td><td><button class="btn btn-sm btn-outline" onclick="toggleReviewUmkm()">Review</button></td></tr>
+          <tr><td>Kerajinan Rotan Asri</td><td>Kerajinan</td><td>Rp 18.000.000</td><td><span class="badge badge-amber">Pending</span></td><td><button class="btn btn-sm btn-outline">Review</button></td></tr>
+          <tr><td>Warung Makan Bu Sari</td><td>Kuliner</td><td>Rp 60.000.000</td><td><span class="badge badge-green">Approved</span></td><td><button class="btn btn-sm btn-outline">Lihat</button></td></tr>
+          <tr><td>Konveksi Maju Jaya</td><td>Fashion</td><td>Rp 30.000.000</td><td><span class="badge badge-green">Approved</span></td><td><button class="btn btn-sm btn-outline">Lihat</button></td></tr>
+        </table>
+      </div>
+
+      <div class="review-panel card" id="review-umkm" style="display:none">
+        <div class="section-h" style="margin-top:0">Review — Sate Klathak Pak Bowo</div>
+        <div class="info-mini">
+          <div class="info-mini-item"><span>Kategori</span>Kuliner</div>
+          <div class="info-mini-item"><span>Target dana</span>Rp 25.000.000</div>
+          <div class="info-mini-item"><span>% bagi hasil</span>28%</div>
+          <div class="info-mini-item"><span>Kota</span>Bantul, Yogyakarta</div>
+        </div>
+        <div class="review-grid">
+          <div class="doc-viewer"><span><i class="ti ti-file-text" style="font-size:22px"></i></span>NIB Usaha</div>
+          <div class="doc-viewer"><span><i class="ti ti-chart-bar" style="font-size:22px"></i></span>Laporan Keuangan 3 Bln</div>
+          <div class="doc-viewer"><span><i class="ti ti-id-badge-2" style="font-size:22px"></i></span>KTP Pemilik</div>
+          <div class="doc-viewer"><span><i class="ti ti-camera" style="font-size:22px"></i></span>Foto Usaha</div>
+        </div>
+        <textarea class="review-note" rows="3" placeholder="Catatan review (opsional)"></textarea>
+        <div class="review-actions">
+          <button class="btn btn-danger" onclick="showRejectFormUmkm()">Tolak</button>
+          <button class="btn btn-primary" onclick="alert('UMKM Sate Klathak Pak Bowo diapprove. Campaign tampil di platform dan email terkirim.')">Approve & Kirim Email</button>
+        </div>
+        <div class="reject-form" id="reject-umkm">
+          <label style="font-size:12.5px;font-weight:600">Alasan penolakan</label>
+          <textarea class="review-note" rows="2" placeholder="Contoh: laporan keuangan tidak lengkap"></textarea>
+          <button class="btn btn-danger" onclick="alert('Pendaftaran ditolak, email pemberitahuan telah dikirim.')">Kirim Penolakan</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TRANSAKSI ============ -->
+    <div class="page" id="page-transaksi">
+      <div class="page-header"><div><div class="page-title">Manajemen Transaksi</div><div class="page-sub">Konfirmasi bukti transfer investasi</div></div></div>
+      <div class="filter-tabs">
+        <div class="ftab active">Pending (8)</div><div class="ftab">Terkonfirmasi</div><div class="ftab">Ditolak</div>
+      </div>
+      <div class="card">
+        <table class="data-table">
+          <tr><th>Investor</th><th>UMKM</th><th>Nominal</th><th>Bukti Transfer</th><th>Status</th><th>Aksi</th></tr>
+          <tr><td>Farid Hidayat</td><td>Warung Bu Sari</td><td>Rp 2.000.000</td><td><i class="ti ti-paperclip"></i> bukti.jpg</td><td><span class="badge badge-amber">Pending</span></td><td><button class="btn btn-sm btn-outline">Konfirmasi</button></td></tr>
+          <tr><td>Nabila Putri</td><td>Konveksi Maju Jaya</td><td>Rp 1.500.000</td><td><i class="ti ti-paperclip"></i> transfer.pdf</td><td><span class="badge badge-amber">Pending</span></td><td><button class="btn btn-sm btn-outline">Konfirmasi</button></td></tr>
+          <tr><td>Rendra Kusuma</td><td>Bengkel Pak Haji</td><td>Rp 2.500.000</td><td><i class="ti ti-paperclip"></i> bukti_tf.jpg</td><td><span class="badge badge-green">Terkonfirmasi</span></td><td><button class="btn btn-sm btn-outline">Lihat Invoice</button></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ BAGI HASIL ============ -->
+    <div class="page" id="page-bagihasil">
+      <div class="page-header"><div><div class="page-title">Manajemen Bagi Hasil</div><div class="page-sub">Review pengajuan disbursement UMKM</div></div></div>
+      <div class="filter-tabs">
+        <div class="ftab active">Pending Review (3)</div><div class="ftab">Approved</div><div class="ftab">Processed</div><div class="ftab">Overdue</div>
+      </div>
+      <div class="card">
+        <table class="data-table">
+          <tr><th>UMKM</th><th>Periode</th><th>Keuntungan Bersih</th><th>Total Bagi Hasil</th><th>Fee</th><th>Status</th><th>Aksi</th></tr>
+          <tr><td>Konveksi Maju Jaya</td><td>Nov 2024</td><td>Rp 8.500.000</td><td>Rp 2.550.000</td><td>Rp 425.000</td><td><span class="badge badge-amber">Pending</span></td><td><button class="btn btn-sm btn-outline" onclick="toggleReviewBH()">Review</button></td></tr>
+          <tr><td>Bengkel Pak Haji</td><td>Nov 2024</td><td>Rp 6.200.000</td><td>Rp 1.860.000</td><td>Rp 310.000</td><td><span class="badge badge-amber">Pending</span></td><td><button class="btn btn-sm btn-outline">Review</button></td></tr>
+          <tr><td>Warung Bu Sari</td><td>Okt 2024</td><td>Rp 10.800.000</td><td>Rp 3.240.000</td><td>Rp 540.000</td><td><span class="badge badge-green">Processed</span></td><td><button class="btn btn-sm btn-outline">Lihat</button></td></tr>
+        </table>
+      </div>
+
+      <div class="review-panel card" id="review-bh" style="display:none">
+        <div class="section-h" style="margin-top:0">Review — Konveksi Maju Jaya, November 2024</div>
+        <div class="info-mini">
+          <div class="info-mini-item"><span>Keuntungan bersih</span>Rp 8.500.000</div>
+          <div class="info-mini-item"><span>Total bagi hasil (30%)</span>Rp 2.550.000</div>
+          <div class="info-mini-item"><span>Fee platform (5%)</span>Rp 425.000</div>
+          <div class="info-mini-item"><span>Jumlah investor</span>12 orang</div>
+        </div>
+        <div style="margin:14px 0"><a href="#" style="font-size:12.5px;color:var(--teal-700);font-weight:600"><i class="ti ti-file-download"></i> Lihat Laporan Keuangan (download)</a></div>
+        <div class="review-actions">
+          <button class="btn btn-danger">Tolak</button>
+          <button class="btn btn-primary" onclick="alert('Bagi hasil diapprove. Proses distribusi ke 12 investor dimulai.')">Approve & Proses</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ LAPORAN ============ -->
+    <div class="page" id="page-laporan">
+      <div class="page-header">
+        <div><div class="page-title">Laporan Platform</div><div class="page-sub">Ringkasan keuangan dan transaksi platform</div></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline">Export Excel</button>
+          <button class="btn btn-primary">Export PDF</button>
+        </div>
+      </div>
+      <div class="metric-grid">
+        <div class="metric-card"><div class="metric-label">Total Transaksi Masuk</div><div class="metric-val teal">Rp 156.000.000</div></div>
+        <div class="metric-card"><div class="metric-label">Total Bagi Hasil Diproses</div><div class="metric-val">Rp 42.800.000</div></div>
+        <div class="metric-card"><div class="metric-label">Fee Terkumpul</div><div class="metric-val teal">Rp 7.140.000</div></div>
+      </div>
+      <div class="section-h">Fee platform per bulan</div>
+      <div class="card">
+        <div style="display:flex;align-items:flex-end;gap:16px;height:140px;padding:10px 0">
+          <div style="flex:1;text-align:center"><div style="background:var(--teal-100);height:60px;border-radius:6px 6px 0 0;margin-bottom:6px"></div><div style="font-size:11px;color:var(--neutral-500)">Jul</div></div>
+          <div style="flex:1;text-align:center"><div style="background:var(--teal-300);height:80px;border-radius:6px 6px 0 0;margin-bottom:6px"></div><div style="font-size:11px;color:var(--neutral-500)">Agu</div></div>
+          <div style="flex:1;text-align:center"><div style="background:var(--teal-300);height:70px;border-radius:6px 6px 0 0;margin-bottom:6px"></div><div style="font-size:11px;color:var(--neutral-500)">Sep</div></div>
+          <div style="flex:1;text-align:center"><div style="background:var(--teal-500);height:100px;border-radius:6px 6px 0 0;margin-bottom:6px"></div><div style="font-size:11px;color:var(--neutral-500)">Okt</div></div>
+          <div style="flex:1;text-align:center"><div style="background:var(--teal-700);height:120px;border-radius:6px 6px 0 0;margin-bottom:6px"></div><div style="font-size:11px;color:var(--neutral-500)">Nov</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function showPage(name){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+name).classList.add('active');
+  }
+  function setActiveSide(name){
+    const map={dashboard:0,kyc:1,umkm:2,transaksi:3,bagihasil:4,laporan:5};
+    document.querySelectorAll('.side-item').forEach(i=>i.classList.remove('active'));
+    document.querySelectorAll('.side-item')[map[name]].classList.add('active');
+  }
+  document.querySelectorAll('.side-item').forEach(item=>{
+    item.addEventListener('click', function(){
+      document.querySelectorAll('.side-item').forEach(x=>x.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+  function toggleReview(){ document.getElementById('review-kyc').style.display='block'; }
+  function toggleReviewUmkm(){ document.getElementById('review-umkm').style.display='block'; }
+  function toggleReviewBH(){ document.getElementById('review-bh').style.display='block'; }
+  function showRejectForm(){ document.getElementById('reject-kyc').classList.add('show'); }
+  function showRejectFormUmkm(){ document.getElementById('reject-umkm').classList.add('show'); }
+</script>
+</body>
+</html>

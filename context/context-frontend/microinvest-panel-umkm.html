@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MicroInvest — Panel UMKM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+  .ti{font-size:16px;line-height:1}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --teal-900:#04342C;--teal-800:#085041;--teal-700:#0F6E56;--teal-500:#1D9E75;
+    --teal-300:#5DCAA5;--teal-100:#9FE1CB;--teal-50:#E1F5EE;
+    --neutral-900:#111827;--neutral-700:#374151;--neutral-500:#6B7280;--neutral-300:#D1D5DB;
+    --neutral-100:#F3F4F6;--neutral-50:#F9FAFB;--white:#FFFFFF;
+    --success:#10B981;--danger:#EF4444;--warning:#F59E0B;
+    --font:'Inter',system-ui,sans-serif;--radius:10px;--radius-lg:14px;--radius-pill:9999px;
+  }
+  body{font-family:var(--font);background:var(--neutral-50);color:var(--neutral-900);line-height:1.55}
+  a{text-decoration:none;color:inherit}
+
+  .app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+
+  /* SIDEBAR - light, Cruscotto style */
+  .sidebar{background:#fff;border-right:1px solid var(--neutral-100);padding:18px 12px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  .side-logo{display:flex;align-items:center;gap:8px;padding:6px 8px 20px}
+  .side-logo-mark{width:26px;height:26px;background:var(--teal-800);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#fff}
+  .side-logo-text{font-size:14.5px;font-weight:700;color:var(--neutral-900)}
+  .side-badge-topbar{font-size:10px;font-weight:700;color:var(--teal-700);background:var(--teal-50);padding:2px 8px;border-radius:99px;margin-left:auto}
+  .side-nav{display:flex;flex-direction:column;gap:2px;flex:1}
+  .side-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--neutral-500);cursor:pointer;transition:all .15s}
+  .side-item:hover{background:var(--neutral-50)}
+  .side-item.active{background:var(--teal-50);color:var(--teal-800);font-weight:700}
+  .side-icon{width:16px;text-align:center;font-size:14px}
+  .side-user{border-top:1px solid var(--neutral-100);padding-top:14px;margin-top:10px;display:flex;align-items:center;gap:10px}
+  .side-user-avatar{width:32px;height:32px;border-radius:50%;background:var(--teal-800);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+  .side-user-name{font-size:12.5px;font-weight:600}
+  .side-user-status{font-size:10.5px;color:var(--teal-700)}
+
+  .main{padding:26px 36px;max-width:1180px}
+  .page{display:none}
+  .page.active{display:block}
+  .page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+  .page-title{font-size:22px;font-weight:800;letter-spacing:-.4px}
+  .page-sub{font-size:13px;color:var(--neutral-500);margin-top:2px}
+
+  .btn{border:none;cursor:pointer;font-family:var(--font);border-radius:8px;font-weight:600;transition:all .15s}
+  .btn-primary{background:var(--teal-800);color:#fff;padding:10px 20px;font-size:13px}
+  .btn-primary:hover{background:var(--teal-700)}
+  .btn-outline{background:transparent;border:1.5px solid var(--teal-800);color:var(--teal-800);padding:9px 18px;font-size:13px}
+  .btn-danger-outline{background:transparent;border:1.5px solid var(--danger);color:var(--danger);padding:9px 18px;font-size:13px;border-radius:8px}
+  .btn-full{width:100%}
+
+  .card{background:#fff;border:1px solid var(--neutral-100);border-radius:var(--radius-lg);padding:18px 20px}
+  .badge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px}
+  .badge-green{background:var(--teal-50);color:var(--teal-800)}
+  .badge-amber{background:#FEF3C7;color:#92400E}
+  .badge-red{background:#FEE2E2;color:#991B1B}
+  .badge-gray{background:var(--neutral-100);color:var(--neutral-500)}
+
+  /* ALERT BANNER */
+  .alert-banner{display:flex;align-items:center;gap:12px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:var(--radius);padding:14px 18px;margin-bottom:20px}
+  .alert-icon{font-size:18px}
+  .alert-text{flex:1;font-size:13px;color:#92400E}
+  .alert-text strong{font-weight:700}
+
+  /* DASHBOARD METRICS */
+  .metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+  .metric-card{background:#fff;border:1px solid var(--neutral-100);border-radius:var(--radius-lg);padding:16px 18px}
+  .metric-label{font-size:12px;color:var(--neutral-500);margin-bottom:6px}
+  .metric-val{font-size:22px;font-weight:800}
+  .metric-val.teal{color:var(--teal-700)}
+  .metric-sub{font-size:11.5px;color:var(--neutral-500);margin-top:4px}
+
+  .prog-hero{background:#fff;border:1px solid var(--neutral-100);border-radius:var(--radius-lg);padding:24px;text-align:center;margin-bottom:20px}
+  .prog-hero-pct{font-size:40px;font-weight:800;color:var(--teal-800);letter-spacing:-1px}
+  .prog-bar-lg{height:12px;background:var(--teal-50);border-radius:99px;overflow:hidden;margin:16px 0 8px}
+  .prog-fill-lg{height:100%;background:var(--teal-500)}
+  .prog-hero-labels{display:flex;justify-content:space-between;font-size:12.5px;color:var(--neutral-500);max-width:400px;margin:0 auto}
+
+  .countdown-card{display:flex;align-items:center;justify-content:space-between;background:var(--teal-900);color:#fff;border-radius:var(--radius-lg);padding:18px 22px;margin-bottom:20px}
+  .countdown-left{font-size:13.5px}
+  .countdown-left strong{display:block;font-size:16px;margin-bottom:2px}
+
+  .section-h{font-size:15px;font-weight:700;margin:24px 0 12px}
+  table.data-table{width:100%;border-collapse:collapse;font-size:13px}
+  table.data-table th{text-align:left;font-size:11px;color:var(--neutral-500);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--neutral-100)}
+  table.data-table td{padding:11px 10px;border-bottom:1px solid var(--neutral-100)}
+
+  /* FORM PENGAJUAN BAGI HASIL */
+  .form-section{max-width:680px}
+  .field-group{margin-bottom:14px}
+  .field-group label{font-size:12.5px;font-weight:600;color:var(--neutral-700);display:block;margin-bottom:6px}
+  .field-group input,.field-group textarea,.field-group select{width:100%;padding:9px 12px;border:1px solid var(--neutral-300);border-radius:8px;font-size:13.5px;font-family:var(--font);outline:none}
+  .field-group input:focus,.field-group textarea:focus{border-color:var(--teal-500)}
+  .field-group input:disabled{background:var(--neutral-50);color:var(--teal-800);font-weight:700}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+  .calc-box{background:var(--teal-50);border-radius:var(--radius);padding:16px 18px;margin:16px 0}
+  .calc-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;color:var(--neutral-700)}
+  .calc-row strong{color:var(--teal-800)}
+  .calc-divider{border:none;border-top:1px solid rgba(0,0,0,0.06);margin:10px 0}
+
+  .upload-box{border:1.5px dashed var(--neutral-300);border-radius:var(--radius);padding:20px;text-align:center;color:var(--neutral-500);font-size:13px;cursor:pointer}
+  .upload-box:hover{border-color:var(--teal-500);background:var(--teal-50)}
+
+  .checkbox-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--neutral-700);margin:14px 0}
+
+  /* PROFIL USAHA */
+  .profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+  @media(max-width:1000px){
+    .app{grid-template-columns:1fr}
+    .sidebar{display:none}
+    .metric-grid,.form-row,.profile-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="side-logo">
+      <div class="side-logo-mark">M</div>
+      <span class="side-logo-text">MicroInvest</span>
+      <span class="side-badge-topbar">UMKM</span>
+    </div>
+    <div class="side-nav">
+      <div class="side-item active" onclick="showPage('dashboard', this)"><span class="side-icon"><i class="ti ti-layout-dashboard"></i></span>Dashboard</div>
+      <div class="side-item" onclick="showPage('investor', this)"><span class="side-icon"><i class="ti ti-users"></i></span>Daftar Investor</div>
+      <div class="side-item" onclick="showPage('pengajuan', this)"><span class="side-icon"><i class="ti ti-file-invoice"></i></span>Pengajuan Bagi Hasil</div>
+      <div class="side-item" onclick="showPage('riwayat', this)"><span class="side-icon"><i class="ti ti-history"></i></span>Riwayat Bagi Hasil</div>
+      <div class="side-item" onclick="showPage('profilusaha', this)"><span class="side-icon"><i class="ti ti-building-store"></i></span>Profil Usaha</div>
+    </div>
+    <div class="side-user">
+      <div class="side-user-avatar">WS</div>
+      <div><div class="side-user-name">Warung Bu Sari</div><div class="side-user-status">● Campaign Aktif</div></div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- ============ DASHBOARD ============ -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header"><div><div class="page-title">Dashboard</div><div class="page-sub">Ringkasan campaign dan bagi hasil</div></div></div>
+
+      <div class="alert-banner">
+        <span class="alert-icon"><i class="ti ti-alert-triangle"></i></span>
+        <div class="alert-text">Pengajuan bagi hasil bulan ini belum disubmit. <strong>Deadline: 5 hari lagi</strong></div>
+        <button class="btn btn-primary" style="white-space:nowrap" onclick="showPage('pengajuan', null); setActiveSide('pengajuan')">Submit sekarang</button>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card"><div class="metric-label">Dana terkumpul</div><div class="metric-val teal">Rp 45.000.000</div><div class="metric-sub">dari target Rp 60.000.000</div></div>
+        <div class="metric-card"><div class="metric-label">Jumlah investor</div><div class="metric-val">18 orang</div><div class="metric-sub">+3 minggu ini</div></div>
+        <div class="metric-card"><div class="metric-label">Bagi hasil bulan lalu</div><div class="metric-val teal">Rp 1.125.000</div><div class="metric-sub">total didistribusikan</div></div>
+      </div>
+
+      <div class="prog-hero">
+        <div class="prog-hero-pct">75%</div>
+        <div style="font-size:13px;color:var(--neutral-500)">dana terkumpul dari target campaign</div>
+        <div class="prog-bar-lg"><div class="prog-fill-lg" style="width:75%"></div></div>
+        <div class="prog-hero-labels"><span>Rp 45.000.000 terkumpul</span><span>Target Rp 60.000.000</span></div>
+        <div style="font-size:12px;color:var(--neutral-500);margin-top:10px">Sisa 18 hari lagi hingga campaign berakhir</div>
+      </div>
+
+      <div class="countdown-card">
+        <div class="countdown-left">
+          <strong>Jatuh tempo submit bagi hasil</strong>
+          5 hari lagi — periode November 2024
+        </div>
+        <button class="btn" style="background:#fff;color:var(--teal-900);padding:10px 20px;font-size:13px" onclick="showPage('pengajuan', null); setActiveSide('pengajuan')">Submit Bagi Hasil</button>
+      </div>
+
+      <div class="section-h">Riwayat bagi hasil terakhir</div>
+      <div class="card">
+        <table class="data-table">
+          <tr><th>Periode</th><th>Keuntungan Kotor</th><th>Total Bagi Hasil</th><th>Status</th></tr>
+          <tr><td>Oktober 2024</td><td>Rp 12.500.000</td><td>Rp 1.125.000</td><td><span class="badge badge-green">Selesai</span></td></tr>
+          <tr><td>September 2024</td><td>Rp 10.800.000</td><td>Rp 972.000</td><td><span class="badge badge-green">Selesai</span></td></tr>
+          <tr><td>Agustus 2024</td><td>Rp 9.200.000</td><td>Rp 828.000</td><td><span class="badge badge-amber">Diproses</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ DAFTAR INVESTOR ============ -->
+    <div class="page" id="page-investor">
+      <div class="page-header"><div><div class="page-title">Daftar Investor</div><div class="page-sub">18 investor mendanai usahamu</div></div></div>
+      <div class="card">
+        <table class="data-table">
+          <tr><th>Investor</th><th>Nominal</th><th>% Kepemilikan</th><th>Tanggal Investasi</th></tr>
+          <tr><td>R***a K.</td><td>Rp 1.000.000</td><td>2.2%</td><td>2 Nov 2024</td></tr>
+          <tr><td>A***a N.</td><td>Rp 4.000.000</td><td>8.9%</td><td>5 Nov 2024</td></tr>
+          <tr><td>D***i S.</td><td>Rp 2.500.000</td><td>5.6%</td><td>8 Nov 2024</td></tr>
+          <tr><td>M***i I.</td><td>Rp 3.000.000</td><td>6.7%</td><td>12 Nov 2024</td></tr>
+          <tr><td>B***u P.</td><td>Rp 5.000.000</td><td>11.1%</td><td>15 Nov 2024</td></tr>
+          <tr><td>S***i W.</td><td>Rp 1.500.000</td><td>3.3%</td><td>18 Nov 2024</td></tr>
+          <tr><td>H***a R.</td><td>Rp 2.000.000</td><td>4.4%</td><td>20 Nov 2024</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ PENGAJUAN BAGI HASIL ============ -->
+    <div class="page" id="page-pengajuan">
+      <div class="page-header">
+        <div>
+          <div style="font-size:12px;color:var(--neutral-500);margin-bottom:4px">Dashboard / Pengajuan Bagi Hasil</div>
+          <div class="page-title" style="font-size:19px">Pengajuan Bagi Hasil — November 2024</div>
+        </div>
+        <span class="badge badge-amber">Belum disubmit</span>
+      </div>
+
+      <div class="form-section">
+        <div class="card">
+          <div class="section-h" style="margin-top:0">1. Input keuangan</div>
+          <div class="form-row">
+            <div class="field-group"><label>Periode</label><input value="November 2024" disabled></div>
+            <div class="field-group"><label>Keuntungan kotor bulan ini (Rp)</label><input type="text" id="kotor" value="12.500.000" oninput="hitungBagiHasil()"></div>
+          </div>
+          <div class="form-row">
+            <div class="field-group"><label>Biaya operasional (Rp)</label><input type="text" id="ops" value="1.700.000" oninput="hitungBagiHasil()"></div>
+            <div class="field-group"><label>Keuntungan bersih</label><input id="bersih" disabled></div>
+          </div>
+
+          <div class="calc-box">
+            <div class="calc-row"><span>Keuntungan bersih</span><strong id="calc-bersih">Rp 10.800.000</strong></div>
+            <div class="calc-row"><span>Total bagi hasil investor (30%)</span><strong id="calc-bagihasil">Rp 3.240.000</strong></div>
+            <hr class="calc-divider">
+            <table class="data-table" style="font-size:12px">
+              <tr><th>Investor</th><th>Nominal</th><th>%</th><th>Bagi hasil</th></tr>
+              <tr><td>R***a K.</td><td>Rp 1jt</td><td>2.2%</td><td>Rp 71.280</td></tr>
+              <tr><td>A***a N.</td><td>Rp 4jt</td><td>8.9%</td><td>Rp 288.360</td></tr>
+              <tr><td>B***u P.</td><td>Rp 5jt</td><td>11.1%</td><td>Rp 359.640</td></tr>
+              <tr><td colspan="3" style="color:var(--neutral-500)">+ 15 investor lainnya</td><td>Rp 2.520.720</td></tr>
+            </table>
+            <hr class="calc-divider">
+            <div class="calc-row"><span>Fee platform (5%)</span><strong>Rp 540.000</strong></div>
+            <div class="calc-row" style="font-size:14px"><span>Total dibayarkan UMKM</span><strong style="color:var(--teal-900)">Rp 3.780.000</strong></div>
+          </div>
+
+          <div class="section-h">2. Upload dokumen</div>
+          <div class="field-group">
+            <label>Laporan keuangan bulan ini</label>
+            <div class="upload-box"><i class="ti ti-paperclip"></i> Klik atau drag file laporan keuangan (PDF/gambar, maks 5MB)</div>
+          </div>
+          <div class="field-group"><label>Catatan tambahan (opsional)</label><textarea rows="3" placeholder="Contoh: penjualan meningkat karena promo akhir tahun"></textarea></div>
+
+          <div class="checkbox-row"><input type="checkbox" id="confirm"><label for="confirm">Saya menyatakan data di atas benar dan sesuai laporan keuangan</label></div>
+          <button class="btn btn-primary btn-full" onclick="alert('Pengajuan bagi hasil berhasil dikirim ke admin untuk direview.')">Submit Pengajuan</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ RIWAYAT BAGI HASIL ============ -->
+    <div class="page" id="page-riwayat">
+      <div class="page-header"><div><div class="page-title">Riwayat Bagi Hasil</div><div class="page-sub">Semua pengajuan bagi hasil per periode</div></div></div>
+      <div class="card">
+        <table class="data-table">
+          <tr><th>Periode</th><th>Keuntungan Bersih</th><th>Total Bagi Hasil</th><th>Fee Platform</th><th>Status</th></tr>
+          <tr><td>November 2024</td><td>Rp 10.800.000</td><td>Rp 3.240.000</td><td>Rp 540.000</td><td><span class="badge badge-amber">Belum disubmit</span></td></tr>
+          <tr><td>Oktober 2024</td><td>Rp 12.500.000</td><td>Rp 3.750.000</td><td>Rp 625.000</td><td><span class="badge badge-green">Selesai</span></td></tr>
+          <tr><td>September 2024</td><td>Rp 10.800.000</td><td>Rp 3.240.000</td><td>Rp 540.000</td><td><span class="badge badge-green">Selesai</span></td></tr>
+          <tr><td>Agustus 2024</td><td>Rp 9.200.000</td><td>Rp 2.760.000</td><td>Rp 460.000</td><td><span class="badge badge-amber">Diproses</span></td></tr>
+          <tr><td>Juli 2024</td><td>Rp 8.400.000</td><td>Rp 2.520.000</td><td>Rp 420.000</td><td><span class="badge badge-red">Terlambat</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ PROFIL USAHA ============ -->
+    <div class="page" id="page-profilusaha">
+      <div class="page-header"><div><div class="page-title">Profil Usaha</div><div class="page-sub">Kelola informasi dan dokumen usahamu</div></div></div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+          <div class="side-user-avatar" style="width:54px;height:54px;font-size:16px">WS</div>
+          <div><div style="font-size:15px;font-weight:700">Warung Makan Bu Sari</div><div style="font-size:12px;color:var(--teal-700);font-weight:600">● Campaign aktif · Kuliner</div></div>
+        </div>
+        <div class="profile-grid">
+          <div class="field-group"><label>Nama usaha</label><input value="Warung Makan Bu Sari"></div>
+          <div class="field-group"><label>Kategori</label><select><option>Kuliner</option><option>Fashion</option></select></div>
+          <div class="field-group"><label>Kota</label><input value="Yogyakarta"></div>
+          <div class="field-group"><label>Tahun berdiri</label><input value="2018"></div>
+          <div class="field-group"><label>Target dana</label><input value="Rp 60.000.000"></div>
+          <div class="field-group"><label>% bagi hasil</label><input value="30%"></div>
+        </div>
+        <div class="field-group"><label>Deskripsi usaha</label><textarea rows="3">Warung Makan Bu Sari telah beroperasi sejak 2018 di kawasan Malioboro, melayani rata-rata 200 pelanggan per hari dengan menu masakan Jawa khas.</textarea></div>
+        <button class="btn btn-primary">Simpan perubahan</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function showPage(name){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+name).classList.add('active');
+  }
+  function setActiveSide(name){
+    const map={dashboard:0,investor:1,pengajuan:2,riwayat:3,profilusaha:4};
+    document.querySelectorAll('.side-item').forEach(i=>i.classList.remove('active'));
+    document.querySelectorAll('.side-item')[map[name]].classList.add('active');
+  }
+  document.querySelectorAll('.side-item').forEach(item=>{
+    item.addEventListener('click', function(){
+      document.querySelectorAll('.side-item').forEach(x=>x.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+  function hitungBagiHasil(){
+    const kotor = Number(document.getElementById('kotor').value.replace(/\./g,'').replace(/[^0-9]/g,'')) || 0;
+    const ops = Number(document.getElementById('ops').value.replace(/\./g,'').replace(/[^0-9]/g,'')) || 0;
+    const bersih = kotor - ops;
+    document.getElementById('bersih').value = 'Rp ' + bersih.toLocaleString('id-ID');
+    document.getElementById('calc-bersih').textContent = 'Rp ' + bersih.toLocaleString('id-ID');
+    const bagihasil = Math.round(bersih * 0.3);
+    document.getElementById('calc-bagihasil').textContent = 'Rp ' + bagihasil.toLocaleString('id-ID');
+  }
+  hitungBagiHasil();
+</script>
+</body>
+</html>

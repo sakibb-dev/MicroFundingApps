@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  /* Tema Hijau — Landing Page & Panel Investor */
+  --color-green-950: #0A1F14;
+  --color-green-900: #123322;
+  --color-green-800: #1B4332;
+  --color-green-700: #1A4F35;
+  --color-green-600: #166534;
+  --color-green-500: #16A34A;
+  --color-green-400: #22C55E;
+  --color-green-300: #4ADE80;
+  --color-green-200: #86EFAC;
+  --color-green-100: #D1FAE5;
+  --color-green-50: #F0FDF4;
+
+  /* Tema Teal — Panel UMKM & Panel Admin */
+  --color-teal-900: #04342C;
+  --color-teal-800: #085041;
+  --color-teal-700: #0F6E56;
+  --color-teal-600: #14855F;
+  --color-teal-500: #1D9E75;
+  --color-teal-300: #5DCAA5;
+  --color-teal-100: #9FE1CB;
+  --color-teal-50: #E1F5EE;
+
+  /* Neutral & semantic */
+  --color-neutral-900: #111827;
+  --color-neutral-700: #374151;
+  --color-neutral-500: #6B7280;
+  --color-neutral-400: #9CA3AF;
+  --color-neutral-300: #D1D5DB;
+  --color-neutral-100: #F3F4F6;
+  --color-neutral-50: #F9FAFB;
+
+  --color-success: #10B981;
+  --color-danger: #EF4444;
+  --color-warning: #F59E0B;
+
+  --radius-DEFAULT: 8px;
+  --radius-lg: 14px;
+  --radius-pill: 9999px;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-neutral-900);
+  background: var(--color-neutral-50);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}

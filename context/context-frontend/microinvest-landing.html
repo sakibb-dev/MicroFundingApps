@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MicroInvest — Investasi UMKM, Bagi Hasil Bulanan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+  .ti{font-size:16px;line-height:1}
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green-950: #0A1F14;
+    --green-800: #1B4332;
+    --green-600: #166534;
+    --green-500: #16A34A;
+    --green-400: #22C55E;
+    --green-200: #86EFAC;
+    --green-100: #D1FAE5;
+    --green-50:  #F0FDF4;
+    --neutral-900: #111827;
+    --neutral-700: #374151;
+    --neutral-500: #6B7280;
+    --neutral-300: #D1D5DB;
+    --neutral-100: #F3F4F6;
+    --neutral-50:  #F9FAFB;
+    --white: #FFFFFF;
+    --success: #10B981;
+    --danger:  #EF4444;
+    --warning: #F59E0B;
+    --font: 'Inter', system-ui, sans-serif;
+    --radius-sm: 6px;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+    --radius-pill: 9999px;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--font); background: var(--white); color: var(--neutral-900); line-height: 1.6; }
+
+  /* ── NAVBAR ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--green-950);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 0 5%;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+  .nav-logo-mark {
+    width: 30px; height: 30px; background: var(--green-400); border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 14px; color: var(--green-950);
+  }
+  .nav-logo-text { font-size: 16px; font-weight: 700; color: var(--white); letter-spacing: -0.3px; }
+  .nav-links { display: flex; align-items: center; gap: 28px; }
+  .nav-links a { font-size: 14px; color: rgba(255,255,255,0.65); text-decoration: none; font-weight: 500; transition: color .2s; }
+  .nav-links a:hover { color: var(--white); }
+  .nav-actions { display: flex; align-items: center; gap: 10px; }
+  .btn-nav-ghost {
+    padding: 7px 16px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 600;
+    color: var(--white); background: transparent; border: 1.5px solid rgba(255,255,255,0.25);
+    cursor: pointer; text-decoration: none; transition: border-color .2s;
+  }
+  .btn-nav-ghost:hover { border-color: rgba(255,255,255,0.6); }
+  .btn-nav-primary {
+    padding: 7px 18px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 600;
+    color: var(--green-950); background: var(--green-400); border: none;
+    cursor: pointer; text-decoration: none; transition: background .2s;
+  }
+  .btn-nav-primary:hover { background: var(--green-200); }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--green-950);
+    padding: 100px 5% 80px;
+    display: grid; grid-template-columns: 1fr 420px; gap: 60px; align-items: center;
+    min-height: 600px;
+  }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.25);
+    border-radius: var(--radius-pill); padding: 4px 12px;
+    font-size: 12px; font-weight: 600; color: var(--green-400); margin-bottom: 20px;
+  }
+  .hero-eyebrow span { width: 6px; height: 6px; background: var(--green-400); border-radius: 50%; display: inline-block; }
+  .hero h1 {
+    font-size: clamp(32px, 4vw, 50px); font-weight: 800; color: var(--white);
+    line-height: 1.12; letter-spacing: -1.5px; margin-bottom: 20px;
+  }
+  .hero h1 em { font-style: normal; color: var(--green-400); }
+  .hero-desc { font-size: 16px; color: rgba(255,255,255,0.6); line-height: 1.7; margin-bottom: 36px; max-width: 480px; }
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn-hero-primary {
+    padding: 13px 28px; border-radius: var(--radius-pill); font-size: 15px; font-weight: 700;
+    color: var(--green-950); background: var(--green-400); border: none; cursor: pointer;
+    text-decoration: none; transition: background .2s; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-hero-primary:hover { background: #4ade80; }
+  .btn-hero-ghost {
+    padding: 13px 28px; border-radius: var(--radius-pill); font-size: 15px; font-weight: 600;
+    color: var(--white); background: transparent; border: 1.5px solid rgba(255,255,255,0.22);
+    cursor: pointer; text-decoration: none; transition: border-color .2s;
+  }
+  .btn-hero-ghost:hover { border-color: rgba(255,255,255,0.5); }
+  .hero-social-proof { margin-top: 40px; display: flex; align-items: center; gap: 10px; }
+  .avatars { display: flex; }
+  .avatars span {
+    width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--green-950);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; margin-left: -8px; background: var(--green-600); color: var(--white);
+  }
+  .avatars span:first-child { margin-left: 0; }
+  .hero-social-proof p { font-size: 13px; color: rgba(255,255,255,0.55); }
+  .hero-social-proof strong { color: var(--white); }
+
+  /* Hero card mockup */
+  .hero-visual { position: relative; }
+  .hero-card-main {
+    background: var(--white); border-radius: var(--radius-xl);
+    padding: 20px 22px; box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+  }
+  .hcard-label { font-size: 11px; color: var(--neutral-500); font-weight: 500; margin-bottom: 4px; }
+  .hcard-amount { font-size: 28px; font-weight: 800; color: var(--neutral-900); letter-spacing: -1px; }
+  .hcard-sub { font-size: 12px; color: var(--success); font-weight: 600; margin-bottom: 16px; }
+  .hcard-divider { border: none; border-top: 1px solid var(--neutral-100); margin-bottom: 14px; }
+  .hcard-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .hcard-umkm-name { font-size: 13px; font-weight: 600; color: var(--neutral-900); }
+  .hcard-badge {
+    font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: var(--radius-pill);
+    background: var(--green-100); color: var(--green-600);
+  }
+  .hcard-progress-bar { height: 6px; background: var(--green-100); border-radius: 99px; margin: 6px 0 3px; }
+  .hcard-progress-fill { height: 100%; background: var(--green-400); border-radius: 99px; }
+  .hcard-prog-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--neutral-500); }
+
+  .hero-card-float {
+    position: absolute; bottom: -20px; right: -20px;
+    background: var(--green-800); border-radius: var(--radius-lg);
+    padding: 12px 16px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); min-width: 160px;
+  }
+  .hcf-label { font-size: 11px; color: var(--green-200); margin-bottom: 2px; }
+  .hcf-val { font-size: 22px; font-weight: 800; color: var(--white); }
+  .hcf-sub { font-size: 11px; color: var(--green-200); margin-top: 1px; }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    background: var(--white); border-bottom: 1px solid var(--neutral-100);
+    padding: 40px 5%;
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+  .stat-item { text-align: center; padding: 0 20px; position: relative; }
+  .stat-item:not(:last-child)::after {
+    content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    height: 40px; width: 1px; background: var(--neutral-200, #E5E7EB);
+  }
+  .stat-num { font-size: 38px; font-weight: 800; color: var(--green-800); letter-spacing: -1.5px; }
+  .stat-num sup { font-size: 18px; vertical-align: super; }
+  .stat-label { font-size: 13px; color: var(--neutral-500); font-weight: 500; margin-top: 2px; }
+
+  /* ── PARTNER LOGOS ── */
+  .partners { padding: 28px 5%; border-bottom: 1px solid var(--neutral-100); }
+  .partners-label { text-align: center; font-size: 12px; color: var(--neutral-400, #9CA3AF); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 20px; }
+  .partners-logos { display: flex; align-items: center; justify-content: center; gap: 40px; flex-wrap: wrap; }
+  .partner-logo { font-size: 15px; font-weight: 700; color: var(--neutral-400, #9CA3AF); letter-spacing: -0.3px; }
+
+  /* ── HOW IT WORKS ── */
+  .how { padding: 80px 5%; background: var(--neutral-50); }
+  .section-eyebrow { text-align: center; font-size: 12px; font-weight: 600; color: var(--green-600); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
+  .section-title { text-align: center; font-size: clamp(24px, 3vw, 34px); font-weight: 800; color: var(--neutral-900); letter-spacing: -0.8px; margin-bottom: 10px; }
+  .section-desc { text-align: center; font-size: 15px; color: var(--neutral-500); max-width: 520px; margin: 0 auto 52px; line-height: 1.7; }
+  .how-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; position: relative; }
+  .how-steps::before {
+    content: ''; position: absolute; top: 28px; left: calc(16.6% + 28px); right: calc(16.6% + 28px);
+    height: 1px; background: var(--neutral-300); z-index: 0;
+  }
+  .step-card { background: var(--white); border: 1px solid var(--neutral-100); border-radius: var(--radius-xl); padding: 28px 24px; position: relative; z-index: 1; }
+  .step-num {
+    width: 48px; height: 48px; border-radius: 50%; background: var(--green-800);
+    color: var(--white); font-size: 18px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
+  }
+  .step-card h3 { font-size: 16px; font-weight: 700; color: var(--neutral-900); margin-bottom: 8px; }
+  .step-card p { font-size: 14px; color: var(--neutral-500); line-height: 1.65; }
+
+  /* ── UMKM SHOWCASE ── */
+  .showcase { padding: 80px 5%; background: var(--white); }
+  .showcase-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 36px; }
+  .showcase-header-left { }
+  .showcase-header .section-title { text-align: left; margin-bottom: 6px; }
+  .showcase-header .section-desc { text-align: left; margin: 0; }
+  .btn-see-all {
+    font-size: 13px; font-weight: 600; color: var(--green-600); text-decoration: none;
+    border: 1.5px solid var(--green-600); padding: 8px 18px; border-radius: var(--radius-pill);
+    white-space: nowrap; transition: all .2s; flex-shrink: 0; margin-left: 20px;
+  }
+  .btn-see-all:hover { background: var(--green-50); }
+  .umkm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .umkm-card { background: var(--white); border: 1px solid var(--neutral-100); border-radius: var(--radius-xl); overflow: hidden; transition: box-shadow .2s; }
+  .umkm-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+  .umkm-img { height: 160px; background: var(--neutral-100); position: relative; display: flex; align-items: center; justify-content: center; }
+  .umkm-img-placeholder { font-size: 32px; opacity: 0.3; }
+  .umkm-status-badge {
+    position: absolute; top: 12px; right: 12px;
+    font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: var(--radius-pill);
+  }
+  .badge-active { background: var(--green-100); color: var(--green-600); }
+  .badge-hot { background: #FEF3C7; color: #92400E; }
+  .badge-full { background: var(--neutral-100); color: var(--neutral-500); }
+  .umkm-body { padding: 16px 18px 20px; }
+  .umkm-cat { font-size: 11px; font-weight: 600; color: var(--neutral-500); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px; }
+  .umkm-name { font-size: 15px; font-weight: 700; color: var(--neutral-900); margin-bottom: 2px; }
+  .umkm-city { font-size: 12px; color: var(--neutral-500); margin-bottom: 12px; }
+  .umkm-return { font-size: 20px; font-weight: 800; color: var(--green-600); letter-spacing: -0.5px; }
+  .umkm-return span { font-size: 12px; font-weight: 500; color: var(--neutral-500); }
+  .umkm-progress-wrap { margin: 10px 0 6px; }
+  .umkm-prog-bar { height: 7px; background: var(--green-100); border-radius: 99px; overflow: hidden; }
+  .umkm-prog-fill { height: 100%; background: var(--green-400); border-radius: 99px; }
+  .umkm-prog-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--neutral-500); margin-top: 4px; }
+  .umkm-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--neutral-100); }
+  .umkm-meta { font-size: 12px; color: var(--neutral-500); }
+  .btn-detail {
+    font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: var(--radius-pill);
+    background: var(--green-800); color: var(--white); border: none; cursor: pointer; text-decoration: none;
+    transition: background .2s;
+  }
+  .btn-detail:hover { background: var(--green-600); }
+
+  /* ── KEUNGGULAN ── */
+  .keunggulan { padding: 80px 5%; background: var(--green-950); }
+  .keunggulan .section-title { color: var(--white); }
+  .keunggulan .section-desc { color: rgba(255,255,255,0.55); }
+  .keunggulan .section-eyebrow { color: var(--green-400); }
+  .fitur-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .fitur-card {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius-xl); padding: 28px 24px;
+    transition: background .2s;
+  }
+  .fitur-card:hover { background: rgba(255,255,255,0.08); }
+  .fitur-icon {
+    width: 44px; height: 44px; border-radius: var(--radius); background: rgba(34,197,94,0.15);
+    display: flex; align-items: center; justify-content: center; margin-bottom: 16px;
+    font-size: 20px;
+  }
+  .fitur-card h3 { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+  .fitur-card p { font-size: 14px; color: rgba(255,255,255,0.55); line-height: 1.65; }
+
+  /* ── TESTIMONI ── */
+  .testimoni { padding: 80px 5%; background: var(--neutral-50); }
+  .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .testi-card { background: var(--white); border: 1px solid var(--neutral-100); border-radius: var(--radius-xl); padding: 24px; }
+  .testi-stars { color: #F59E0B; font-size: 14px; margin-bottom: 14px; }
+  .testi-quote { font-size: 14px; color: var(--neutral-700); line-height: 1.7; margin-bottom: 20px; font-style: italic; }
+  .testi-author { display: flex; align-items: center; gap: 10px; }
+  .testi-avatar {
+    width: 36px; height: 36px; border-radius: 50%; background: var(--green-800);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: var(--white);
+  }
+  .testi-name { font-size: 13px; font-weight: 700; color: var(--neutral-900); }
+  .testi-city { font-size: 12px; color: var(--neutral-500); }
+  .testi-return { margin-left: auto; text-align: right; }
+  .testi-return span { font-size: 11px; color: var(--neutral-500); }
+  .testi-return strong { display: block; font-size: 15px; font-weight: 800; color: var(--green-600); }
+
+  /* ── FAQ ── */
+  .faq { padding: 80px 5%; background: var(--white); max-width: 780px; margin: 0 auto; }
+  .faq-item { border-bottom: 1px solid var(--neutral-100); }
+  .faq-question {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 0; cursor: pointer; gap: 16px;
+  }
+  .faq-question span { font-size: 15px; font-weight: 600; color: var(--neutral-900); }
+  .faq-chevron { width: 20px; height: 20px; flex-shrink: 0; color: var(--neutral-400); transition: transform .25s; }
+  .faq-answer { font-size: 14px; color: var(--neutral-600, #4B5563); line-height: 1.75; padding-bottom: 20px; display: none; }
+  .faq-item.open .faq-answer { display: block; }
+  .faq-item.open .faq-chevron { transform: rotate(180deg); color: var(--green-600); }
+  .faq-item.open .faq-question span { color: var(--green-800); }
+
+  /* ── CTA BOTTOM ── */
+  .cta-bottom {
+    background: var(--green-800); padding: 80px 5%; text-align: center;
+  }
+  .cta-bottom h2 { font-size: clamp(26px, 3.5vw, 40px); font-weight: 800; color: var(--white); letter-spacing: -1px; margin-bottom: 14px; }
+  .cta-bottom p { font-size: 16px; color: rgba(255,255,255,0.6); margin-bottom: 36px; max-width: 480px; margin-left: auto; margin-right: auto; }
+  .cta-bottom-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn-cta-white {
+    padding: 14px 32px; border-radius: var(--radius-pill); font-size: 15px; font-weight: 700;
+    color: var(--green-800); background: var(--white); border: none; cursor: pointer; text-decoration: none;
+    transition: opacity .2s;
+  }
+  .btn-cta-white:hover { opacity: 0.92; }
+  .btn-cta-outline-w {
+    padding: 14px 32px; border-radius: var(--radius-pill); font-size: 15px; font-weight: 600;
+    color: var(--white); background: transparent; border: 2px solid rgba(255,255,255,0.35);
+    cursor: pointer; text-decoration: none; transition: border-color .2s;
+  }
+  .btn-cta-outline-w:hover { border-color: rgba(255,255,255,0.7); }
+
+  /* ── FOOTER ── */
+  footer { background: var(--green-950); padding: 60px 5% 28px; }
+  .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
+  .footer-brand p { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.7; margin-top: 12px; max-width: 240px; }
+  .footer-col h4 { font-size: 12px; font-weight: 700; color: var(--white); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 14px; }
+  .footer-col a { display: block; font-size: 13px; color: rgba(255,255,255,0.45); text-decoration: none; margin-bottom: 10px; transition: color .2s; }
+  .footer-col a:hover { color: rgba(255,255,255,0.85); }
+  .footer-bottom { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: gap; }
+  .footer-copy { font-size: 12px; color: rgba(255,255,255,0.3); }
+  .footer-legal { display: flex; gap: 20px; }
+  .footer-legal a { font-size: 12px; color: rgba(255,255,255,0.3); text-decoration: none; }
+  .footer-legal a:hover { color: rgba(255,255,255,0.6); }
+
+  /* OJK badge */
+  .ojk-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);
+    border-radius: var(--radius-sm); padding: 4px 10px; margin-top: 14px;
+    font-size: 11px; font-weight: 600; color: var(--green-400);
+  }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; padding: 60px 5%; }
+    .hero-visual { display: none; }
+    .stats-bar { grid-template-columns: repeat(3, 1fr); }
+    .how-steps, .umkm-grid, .fitur-grid, .testi-grid { grid-template-columns: 1fr 1fr; }
+    .how-steps::before { display: none; }
+    .footer-top { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .nav-links { display: none; }
+    .how-steps, .umkm-grid, .fitur-grid, .testi-grid { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: 1fr; gap: 24px; }
+    .stat-item::after { display: none; }
+    .showcase-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .footer-top { grid-template-columns: 1fr 1fr; }
+    .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-mark">M</div>
+    <span class="nav-logo-text">MicroInvest</span>
+  </a>
+  <div class="nav-links">
+    <a href="#how">Cara Kerja</a>
+    <a href="#umkm">UMKM</a>
+    <a href="#keunggulan">Keunggulan</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <div class="nav-actions">
+    <a href="#" class="btn-nav-ghost">Masuk</a>
+    <a href="#" class="btn-nav-primary">Mulai Investasi</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <span></span>
+      Terdaftar &amp; Diawasi OJK
+    </div>
+    <h1>Investasi di UMKM Lokal,<br>Raih <em>Bagi Hasil</em><br>Setiap Bulan</h1>
+    <p class="hero-desc">Danai usaha kecil menengah terverifikasi di sekitarmu. Mulai dari Rp&nbsp;500.000, dapatkan porsi bagi hasil bulanan secara transparan.</p>
+    <div class="hero-actions">
+      <a href="#" class="btn-hero-primary">Mulai Investasi ↗</a>
+      <a href="#umkm" class="btn-hero-ghost">Lihat UMKM</a>
+    </div>
+    <div class="hero-social-proof">
+      <div class="avatars">
+        <span>RK</span><span>AN</span><span>DS</span><span>MI</span>
+      </div>
+      <p>Bergabung bersama <strong>3.200+ investor</strong> aktif di seluruh Indonesia</p>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="hero-card-main">
+      <div class="hcard-label">Total bagi hasil bulan ini</div>
+      <div class="hcard-amount">Rp 1.250.000</div>
+      <div class="hcard-sub">↑ 2.8% dari investasi aktif</div>
+      <hr class="hcard-divider">
+      <div class="hcard-row">
+        <span class="hcard-umkm-name">Warung Bu Sari</span>
+        <span class="hcard-badge">Kuliner</span>
+      </div>
+      <div class="hcard-progress-bar"><div class="hcard-progress-fill" style="width:78%"></div></div>
+      <div class="hcard-prog-labels"><span>78% terdanai</span><span>Rp 23.4jt / 30jt</span></div>
+      <div class="hcard-row" style="margin-top:14px">
+        <span class="hcard-umkm-name">Konveksi Maju Jaya</span>
+        <span class="hcard-badge">Fashion</span>
+      </div>
+      <div class="hcard-progress-bar"><div class="hcard-progress-fill" style="width:45%"></div></div>
+      <div class="hcard-prog-labels"><span>45% terdanai</span><span>Rp 13.5jt / 30jt</span></div>
+    </div>
+    <div class="hero-card-float">
+      <div class="hcf-label">Return rata-rata</div>
+      <div class="hcf-val">2.7%</div>
+      <div class="hcf-sub">per bulan</div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-num">120<sup>+</sup></div>
+    <div class="stat-label">UMKM Aktif</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">Rp&thinsp;2.4M</div>
+    <div class="stat-label">Dana Diinvestasikan</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">3.200<sup>+</sup></div>
+    <div class="stat-label">Investor Aktif</div>
+  </div>
+</section>
+
+<!-- PARTNER LOGOS -->
+<div class="partners">
+  <div class="partners-label">Mitra &amp; Afiliasi Terpercaya</div>
+  <div class="partners-logos">
+    <span class="partner-logo">BRI</span>
+    <span class="partner-logo">Mandiri</span>
+    <span class="partner-logo">OJK</span>
+    <span class="partner-logo">KEMENDAG</span>
+    <span class="partner-logo">BPKM</span>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="section-eyebrow">Cara Kerja</div>
+  <h2 class="section-title">Tiga langkah untuk mulai berinvestasi</h2>
+  <p class="section-desc">Proses sederhana, transparan, dan aman. Dari pendaftaran hingga bagi hasil, semuanya terpantau dalam satu platform.</p>
+  <div class="how-steps">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <h3>Daftar &amp; Verifikasi KYC</h3>
+      <p>Buat akun, isi data diri, upload KTP dan selfie. Tim kami verifikasi dalam 1×24 jam.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <h3>Pilih UMKM &amp; Investasikan</h3>
+      <p>Telusuri UMKM terverifikasi, pilih yang sesuai profil risiko, dan transfer danamu langsung.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <h3>Terima Bagi Hasil Bulanan</h3>
+      <p>Setiap bulan terima porsi bagi hasil proporsional dari keuntungan bersih UMKM yang kamu danai.</p>
+    </div>
+  </div>
+</section>
+
+<!-- UMKM SHOWCASE -->
+<section class="showcase" id="umkm">
+  <div class="showcase-header">
+    <div class="showcase-header-left">
+      <div class="section-eyebrow" style="text-align:left">UMKM Unggulan</div>
+      <h2 class="section-title" style="text-align:left;margin-bottom:6px">Pilihan UMKM hari ini</h2>
+      <p class="section-desc" style="text-align:left;margin:0">Setiap UMKM telah melewati audit dokumen dan review tim analis kami.</p>
+    </div>
+    <a href="#" class="btn-see-all">Lihat semua UMKM</a>
+  </div>
+  <div class="umkm-grid">
+    <!-- Card 1 -->
+    <div class="umkm-card">
+      <div class="umkm-img" style="background:#D1FAE5">
+        <i class="ti ti-tools-kitchen-2 umkm-img-placeholder" style="font-size:30px;color:#065F46"></i>
+        <span class="umkm-status-badge badge-hot">Hampir Penuh</span>
+      </div>
+      <div class="umkm-body">
+        <div class="umkm-cat">Kuliner</div>
+        <div class="umkm-name">Warung Makan Bu Sari</div>
+        <div class="umkm-city"><i class="ti ti-map-pin" style="font-size:12px"></i> Yogyakarta</div>
+        <div class="umkm-return">2.5% <span>/ bulan bagi hasil</span></div>
+        <div class="umkm-progress-wrap">
+          <div class="umkm-prog-bar"><div class="umkm-prog-fill" style="width:78%"></div></div>
+          <div class="umkm-prog-labels"><span>78% terdanai</span><span>Rp 23.4jt / 30jt</span></div>
+        </div>
+        <div class="umkm-footer">
+          <div class="umkm-meta"><i class="ti ti-clock" style="font-size:12px"></i> 12 hari lagi · 34 investor</div>
+          <a href="#" class="btn-detail">Lihat Detail</a>
+        </div>
+      </div>
+    </div>
+    <!-- Card 2 -->
+    <div class="umkm-card">
+      <div class="umkm-img" style="background:#EDE9FE">
+        <i class="ti ti-shirt umkm-img-placeholder" style="font-size:30px;color:#6D28D9"></i>
+        <span class="umkm-status-badge badge-active">Aktif</span>
+      </div>
+      <div class="umkm-body">
+        <div class="umkm-cat">Fashion</div>
+        <div class="umkm-name">Konveksi Maju Jaya</div>
+        <div class="umkm-city"><i class="ti ti-map-pin" style="font-size:12px"></i> Bandung</div>
+        <div class="umkm-return">3.0% <span>/ bulan bagi hasil</span></div>
+        <div class="umkm-progress-wrap">
+          <div class="umkm-prog-bar"><div class="umkm-prog-fill" style="width:45%"></div></div>
+          <div class="umkm-prog-labels"><span>45% terdanai</span><span>Rp 13.5jt / 30jt</span></div>
+        </div>
+        <div class="umkm-footer">
+          <div class="umkm-meta"><i class="ti ti-clock" style="font-size:12px"></i> 28 hari lagi · 18 investor</div>
+          <a href="#" class="btn-detail">Lihat Detail</a>
+        </div>
+      </div>
+    </div>
+    <!-- Card 3 -->
+    <div class="umkm-card">
+      <div class="umkm-img" style="background:#FEF3C7">
+        <i class="ti ti-tool umkm-img-placeholder" style="font-size:30px;color:#92400E"></i>
+        <span class="umkm-status-badge badge-hot">92% — Segera!</span>
+      </div>
+      <div class="umkm-body">
+        <div class="umkm-cat">Otomotif</div>
+        <div class="umkm-name">Bengkel Motor Pak Haji</div>
+        <div class="umkm-city"><i class="ti ti-map-pin" style="font-size:12px"></i> Surabaya</div>
+        <div class="umkm-return">2.8% <span>/ bulan bagi hasil</span></div>
+        <div class="umkm-progress-wrap">
+          <div class="umkm-prog-bar"><div class="umkm-prog-fill" style="width:92%"></div></div>
+          <div class="umkm-prog-labels"><span>92% terdanai</span><span>Rp 27.6jt / 30jt</span></div>
+        </div>
+        <div class="umkm-footer">
+          <div class="umkm-meta"><i class="ti ti-clock" style="font-size:12px"></i> 5 hari lagi · 51 investor</div>
+          <a href="#" class="btn-detail">Lihat Detail</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- KEUNGGULAN -->
+<section class="keunggulan" id="keunggulan">
+  <div class="section-eyebrow">Kenapa MicroInvest</div>
+  <h2 class="section-title">Dirancang untuk kepercayaan investor</h2>
+  <p class="section-desc">Dari verifikasi hingga distribusi bagi hasil, setiap langkah dirancang transparan dan dapat dipantau.</p>
+  <div class="fitur-grid">
+    <div class="fitur-card">
+      <div class="fitur-icon"><i class="ti ti-shield-check" style="color:#22C55E"></i></div>
+      <h3>KYC &amp; Audit Ketat</h3>
+      <p>Setiap investor dan UMKM melewati verifikasi identitas dan audit dokumen keuangan sebelum dapat bertransaksi.</p>
+    </div>
+    <div class="fitur-card">
+      <div class="fitur-icon"><i class="ti ti-cash" style="color:#22C55E"></i></div>
+      <h3>Bagi Hasil Otomatis</h3>
+      <p>Sistem menghitung dan mendistribusikan bagi hasil proporsional setiap bulan, langsung ke rekening investor.</p>
+    </div>
+    <div class="fitur-card">
+      <div class="fitur-icon"><i class="ti ti-chart-bar" style="color:#22C55E"></i></div>
+      <h3>Portofolio Real-time</h3>
+      <p>Pantau semua investasi aktif, riwayat bagi hasil, dan laporan keuangan UMKM kapan saja dari dashboard.</p>
+    </div>
+    <div class="fitur-card">
+      <div class="fitur-icon"><i class="ti ti-lock" style="color:#22C55E"></i></div>
+      <h3>Perjanjian Digital</h3>
+      <p>Invoice dan perjanjian investasi legal dikirim otomatis via email setiap transaksi dikonfirmasi.</p>
+    </div>
+    <div class="fitur-card">
+      <div class="fitur-icon"><i class="ti ti-map-pin" style="color:#22C55E"></i></div>
+      <h3>UMKM Lokal Terverifikasi</h3>
+      <p>Fokus pada UMKM Indonesia yang telah memiliki NIB aktif, laporan keuangan, dan rekam jejak usaha nyata.</p>
+    </div>
+    <div class="fitur-card">
+      <div class="fitur-icon"><i class="ti ti-credit-card" style="color:#22C55E"></i></div>
+      <h3>Mulai dari Rp 500.000</h3>
+      <p>Investasi terjangkau untuk semua kalangan. Diversifikasi ke banyak UMKM dengan modal yang fleksibel.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONI -->
+<section class="testimoni">
+  <div class="section-eyebrow">Dari Investor Kami</div>
+  <h2 class="section-title">Yang mereka rasakan</h2>
+  <p class="section-desc">Lebih dari 3.200 investor aktif sudah mempercayakan dananya melalui MicroInvest.</p>
+  <div class="testi-grid">
+    <div class="testi-card">
+      <div class="testi-stars"><span style="color:#F59E0B;display:inline-flex;gap:2px"><i class="ti ti-star-filled"></i><i class="ti ti-star-filled"></i><i class="ti ti-star-filled"></i><i class="ti ti-star-filled"></i><i class="ti ti-star-filled"></i></span></div>
+      <p class="testi-quote">"Awalnya ragu, tapi setelah 3 bulan bagi hasilnya konsisten masuk tiap tanggal 5. Prosesnya transparan, bisa pantau laporan keuangan UMKM langsung dari dashboard."</p>
+      <div class="testi-author">
+        <div class="testi-avatar">RK</div>
+        <div>
+          <div class="testi-name">R***o K***</div>
+          <div class="testi-city">Jakarta Selatan</div>
+        </div>
+        <div class="testi-return">
+          <span>bagi hasil</span>
+          <strong>+2.6%/bln</strong>
+        </div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars"><span style="color:#F59E0B;display:inline-flex;gap:2px"><i class="ti ti-star-filled"></i><i class="ti ti-star-filled"></i><i class="ti ti-star-filled"></i><i class="ti ti-star-filled"></i><i class="ti ti-star-filled"></i></span></div>
+      <p class="testi-quote">"Suka banget bisa investasi sambil bantu UMKM lokal. Verifikasi KYC-nya cepat, dalam 1 hari sudah bisa langsung pilih UMKM mana yang mau didanai."</p>
+      <div class="testi-author">
+        <div class="testi-avatar">AN</div>
+        <div>
+          <div class="testi-name">A***a N***</div>
+          <div class="testi-city">Bandung</div>
+        </div>
+        <div class="testi-return">
+          <span>bagi hasil</span>
+          <strong>+2.9%/bln</strong>
+        </div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars"><span style="color:#F59E0B;display:inline-flex;gap:2px"><i class="ti ti-star-filled"></i><i class="ti ti-star-filled"></i><i class="ti ti-star-filled"></i><i class="ti ti-star-filled"></i><i class="ti ti-star"></i></span></div>
+      <p class="testi-quote">"Sudah diversifikasi ke 5 UMKM berbeda. Total bagi hasil bulan ini Rp 1.8jt dari dana yang saya investasikan. Platform ini beneran bikin UMKM dan investor sama-sama untung."</p>
+      <div class="testi-author">
+        <div class="testi-avatar">DS</div>
+        <div>
+          <div class="testi-name">D***i S***</div>
+          <div class="testi-city">Surabaya</div>
+        </div>
+        <div class="testi-return">
+          <span>bagi hasil</span>
+          <strong>+3.1%/bln</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section style="padding: 80px 5%; background: var(--white);" id="faq">
+  <div class="section-eyebrow">FAQ</div>
+  <h2 class="section-title">Pertanyaan yang sering ditanyakan</h2>
+  <p class="section-desc">Tidak menemukan jawaban? Hubungi tim kami di support@microinvest.id</p>
+  <div class="faq" style="padding: 0; max-width: 700px; margin: 0 auto;">
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>Bagaimana cara mulai berinvestasi di MicroInvest?</span>
+        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="faq-answer">Daftar akun, lengkapi data diri, upload KTP dan selfie memegang KTP. Tim kami akan memverifikasi dalam 1×24 jam. Setelah status KYC approved, kamu sudah bisa mulai memilih dan mendanai UMKM.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>Apakah investasi saya aman?</span>
+        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="faq-answer">Semua UMKM wajib menyerahkan NIB, KTP pemilik, dan laporan keuangan 3 bulan terakhir sebelum diapprove. Perjanjian investasi berkekuatan hukum dikirim ke emailmu setiap transaksi. Namun seperti investasi lainnya, return tidak dijamin dan ada risiko bisnis.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>Bagaimana cara menghitung bagi hasil?</span>
+        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="faq-answer">Bagi hasil = (Nominal Investasimu / Total Dana Terkumpul) × Keuntungan Bersih UMKM × Persentase Bagi Hasil yang disepakati. Contoh: investasi Rp 1jt dari total Rp 30jt, keuntungan bersih UMKM Rp 10jt, bagi hasil 30% → kamu terima Rp 10.000.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>Berapa minimal investasi?</span>
+        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="faq-answer">Investasi minimum adalah Rp 500.000 per UMKM. Tidak ada batas maksimum. Kami menyarankan diversifikasi ke beberapa UMKM untuk mengurangi risiko konsentrasi.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>Kapan bagi hasil dikirim ke rekening saya?</span>
+        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="faq-answer">UMKM wajib mengajukan laporan keuntungan dan bagi hasil sebelum tanggal 3 setiap bulan. Setelah diverifikasi admin, distribusi ke investor dilakukan paling lambat tanggal 5 bulan berjalan.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BOTTOM -->
+<section class="cta-bottom">
+  <h2>Siap mulai investasi di UMKM lokal?</h2>
+  <p>Bergabung dengan ribuan investor yang sudah mendapatkan bagi hasil bulanan sambil membantu ekonomi lokal berkembang.</p>
+  <div class="cta-bottom-actions">
+    <a href="#" class="btn-cta-white">Daftar Sekarang — Gratis</a>
+    <a href="#umkm" class="btn-cta-outline-w">Lihat UMKM Dulu</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <a href="#" class="nav-logo" style="text-decoration:none">
+        <div class="nav-logo-mark">M</div>
+        <span class="nav-logo-text">MicroInvest</span>
+      </a>
+      <p>Platform investasi UMKM berbasis bagi hasil yang transparan, terverifikasi, dan berdampak nyata bagi ekonomi lokal Indonesia.</p>
+      <div class="ojk-badge"><i class="ti ti-shield-check"></i> Terdaftar OJK</div>
+    </div>
+    <div class="footer-col">
+      <h4>Platform</h4>
+      <a href="#">Cara Kerja</a>
+      <a href="#">UMKM Aktif</a>
+      <a href="#">Keunggulan</a>
+      <a href="#">Blog</a>
+    </div>
+    <div class="footer-col">
+      <h4>Investor</h4>
+      <a href="#">Daftar Akun</a>
+      <a href="#">Panduan KYC</a>
+      <a href="#">Kalkulator Return</a>
+      <a href="#">Portofolio</a>
+    </div>
+    <div class="footer-col">
+      <h4>UMKM</h4>
+      <a href="#">Daftarkan Usaha</a>
+      <a href="#">Syarat Pengajuan</a>
+      <a href="#">Panduan Bagi Hasil</a>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <a href="#">Kebijakan Privasi</a>
+      <a href="#">Syarat &amp; Ketentuan</a>
+      <a href="#">Perjanjian Investasi</a>
+      <a href="#">Kontak</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2024 MicroInvest. Hak cipta dilindungi.</div>
+    <div class="footer-legal">
+      <a href="#">Kebijakan Privasi</a>
+      <a href="#">Syarat & Ketentuan</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function toggleFaq(el) {
+    const item = el.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+</script>
+
+</body>
+</html>

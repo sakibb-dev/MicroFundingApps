@@ -1,0 +1,10 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# Each app manages its own build artifacts, deps, and .env via its own
+# .gitignore (app/backend/.gitignore, app/frontend/.gitignore) — this file
+# only catches root-level stragglers.

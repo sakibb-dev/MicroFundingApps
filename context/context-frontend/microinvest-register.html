@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MicroInvest — Daftar Akun</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --green-950:#0A1F14;--green-800:#1B4332;--green-600:#166534;--green-500:#16A34A;
+    --green-400:#22C55E;--green-200:#86EFAC;--green-100:#D1FAE5;--green-50:#F0FDF4;
+    --neutral-900:#111827;--neutral-700:#374151;--neutral-500:#6B7280;--neutral-300:#D1D5DB;
+    --neutral-100:#F3F4F6;--neutral-50:#F9FAFB;--white:#FFFFFF;
+    --success:#10B981;--danger:#EF4444;--warning:#F59E0B;
+    --font:'Inter',system-ui,sans-serif;--radius:10px;--radius-lg:14px;--radius-pill:9999px;
+  }
+  body{font-family:var(--font);background:var(--neutral-50);color:var(--neutral-900);line-height:1.55}
+  a{text-decoration:none;color:inherit}
+  .ti{line-height:1}
+
+  nav{position:sticky;top:0;z-index:100;background:var(--green-950);padding:0 5%;display:flex;align-items:center;justify-content:space-between;height:64px}
+  .nav-logo{display:flex;align-items:center;gap:8px}
+  .nav-logo-mark{width:30px;height:30px;background:var(--green-400);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:var(--green-950)}
+  .nav-logo-text{font-size:16px;font-weight:700;color:#fff}
+  .nav-back{display:flex;align-items:center;gap:6px;font-size:13.5px;color:rgba(255,255,255,.65);font-weight:500}
+
+  .register-wrap{max-width:640px;margin:0 auto;padding:40px 20px 80px}
+
+  .role-toggle{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--white);border:1px solid var(--neutral-100);border-radius:var(--radius-lg);padding:6px;margin-bottom:32px}
+  .role-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 12px;border-radius:10px;cursor:pointer;border:none;background:transparent;font-family:var(--font);transition:all .15s}
+  .role-btn .ti{font-size:22px;color:var(--neutral-500)}
+  .role-btn-label{font-size:13.5px;font-weight:700;color:var(--neutral-700)}
+  .role-btn-sub{font-size:11px;color:var(--neutral-500)}
+  .role-btn.active{background:var(--green-800)}
+  .role-btn.active .ti{color:var(--green-400)}
+  .role-btn.active .role-btn-label{color:#fff}
+  .role-btn.active .role-btn-sub{color:var(--green-100)}
+
+  .stepper{display:flex;align-items:center;margin-bottom:28px}
+  .step{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;position:relative}
+  .step-circle{width:32px;height:32px;border-radius:50%;background:var(--neutral-100);color:var(--neutral-500);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;z-index:1;transition:all .2s}
+  .step-label{font-size:11px;color:var(--neutral-500);font-weight:600;text-align:center}
+  .step-line{position:absolute;top:16px;left:50%;width:100%;height:2px;background:var(--neutral-100);z-index:0}
+  .step:last-child .step-line{display:none}
+  .step.active .step-circle{background:var(--green-800);color:#fff}
+  .step.active .step-label{color:var(--green-800)}
+  .step.done .step-circle{background:var(--green-400);color:var(--green-950)}
+  .step.done .step-line{background:var(--green-400)}
+
+  .form-card{background:var(--white);border:1px solid var(--neutral-100);border-radius:var(--radius-lg);padding:28px}
+  .form-step{display:none}
+  .form-step.active{display:block}
+  .form-step-title{font-size:18px;font-weight:800;margin-bottom:4px}
+  .form-step-desc{font-size:13px;color:var(--neutral-500);margin-bottom:22px}
+
+  .field-group{margin-bottom:16px}
+  .field-group label{font-size:12.5px;font-weight:600;color:var(--neutral-700);display:flex;align-items:center;gap:4px;margin-bottom:6px}
+  .req{color:var(--danger)}
+  .field-group input,.field-group select,.field-group textarea{
+    width:100%;padding:10px 12px;border:1px solid var(--neutral-300);border-radius:8px;
+    font-size:13.5px;font-family:var(--font);outline:none;color:var(--neutral-900);background:#fff;
+  }
+  .field-group input:focus,.field-group select:focus,.field-group textarea:focus{border-color:var(--green-400);box-shadow:0 0 0 3px var(--green-100)}
+  .field-hint{font-size:11.5px;color:var(--neutral-500);margin-top:5px}
+  .field-error{font-size:11.5px;color:var(--danger);margin-top:5px;display:none;align-items:center;gap:4px}
+  .field-group.has-error input,.field-group.has-error select{border-color:var(--danger)}
+  .field-group.has-error .field-error{display:flex}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+  .password-wrap{position:relative}
+  .password-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--neutral-500);background:none;border:none;padding:4px}
+
+  .dropzone{
+    border:1.5px dashed var(--neutral-300);border-radius:var(--radius);padding:24px 16px;text-align:center;
+    cursor:pointer;transition:all .15s;position:relative;
+  }
+  .dropzone:hover{border-color:var(--green-400);background:var(--green-50)}
+  .dropzone.filled{border-style:solid;border-color:var(--green-400);background:var(--green-50)}
+  .dropzone .ti{font-size:26px;color:var(--neutral-500);margin-bottom:8px}
+  .dropzone.filled .ti{color:var(--green-600)}
+  .dropzone-text{font-size:12.5px;color:var(--neutral-700);font-weight:600}
+  .dropzone-hint{font-size:11px;color:var(--neutral-500);margin-top:3px}
+  .dropzone-filename{font-size:12px;color:var(--green-700);font-weight:600;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:4px}
+  .upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+
+  .review-block{background:var(--neutral-50);border-radius:var(--radius);padding:16px 18px;margin-bottom:14px}
+  .review-block-title{font-size:12px;font-weight:700;color:var(--green-800);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .review-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--neutral-100)}
+  .review-row:last-child{border-bottom:none}
+  .review-row span:first-child{color:var(--neutral-500)}
+  .review-row span:last-child{font-weight:600;text-align:right}
+
+  .checkbox-row{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;color:var(--neutral-700);margin:18px 0;line-height:1.6}
+  .checkbox-row input{margin-top:2px;accent-color:var(--green-600)}
+  .checkbox-row a{color:var(--green-700);font-weight:600}
+
+  .form-nav{display:flex;justify-content:space-between;align-items:center;margin-top:24px;gap:10px}
+  .btn{border:none;cursor:pointer;font-family:var(--font);border-radius:var(--radius-pill);font-weight:700;transition:all .15s;font-size:14px}
+  .btn-primary{background:var(--green-800);color:#fff;padding:12px 26px}
+  .btn-primary:hover{background:var(--green-600)}
+  .btn-primary:disabled{background:var(--neutral-300);cursor:not-allowed}
+  .btn-ghost{background:transparent;color:var(--neutral-700);padding:12px 20px;display:flex;align-items:center;gap:6px}
+  .btn-ghost:hover{color:var(--neutral-900)}
+
+  .success-wrap{text-align:center;padding:20px 0}
+  .success-icon{width:64px;height:64px;border-radius:50%;background:var(--green-100);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+  .success-icon .ti{font-size:32px;color:var(--green-600)}
+  .success-title{font-size:19px;font-weight:800;margin-bottom:8px}
+  .success-desc{font-size:13.5px;color:var(--neutral-500);max-width:380px;margin:0 auto 24px;line-height:1.7}
+  .success-info{background:var(--green-50);border-radius:var(--radius);padding:14px 18px;font-size:12.5px;color:var(--green-800);display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:24px}
+
+  .login-link{text-align:center;font-size:13px;color:var(--neutral-500);margin-top:24px}
+  .login-link a{color:var(--green-700);font-weight:700}
+
+  @media(max-width:600px){
+    .form-row,.upload-grid{grid-template-columns:1fr}
+    .form-card{padding:20px}
+    .step-label{display:none}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-mark">M</div>
+    <span class="nav-logo-text">MicroInvest</span>
+  </a>
+  <a href="#" class="nav-back"><i class="ti ti-arrow-left"></i> Kembali ke Beranda</a>
+</nav>
+
+<div class="register-wrap">
+
+  <div class="role-toggle">
+    <button class="role-btn active" id="role-investor" onclick="switchRole('investor')">
+      <i class="ti ti-user-circle"></i>
+      <span class="role-btn-label">Daftar sebagai Investor</span>
+      <span class="role-btn-sub">Danai UMKM & terima bagi hasil</span>
+    </button>
+    <button class="role-btn" id="role-umkm" onclick="switchRole('umkm')">
+      <i class="ti ti-building-store"></i>
+      <span class="role-btn-label">Daftar sebagai UMKM</span>
+      <span class="role-btn-sub">Ajukan pendanaan usaha</span>
+    </button>
+  </div>
+
+  <div id="form-investor">
+    <div class="stepper" id="stepper-investor">
+      <div class="step active" data-step="1"><div class="step-circle">1</div><div class="step-label">Data Diri</div><div class="step-line"></div></div>
+      <div class="step" data-step="2"><div class="step-circle">2</div><div class="step-label">Dokumen KYC</div><div class="step-line"></div></div>
+      <div class="step" data-step="3"><div class="step-circle">3</div><div class="step-label">Review</div><div class="step-line"></div></div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-step active" data-form-step="1" data-group="investor">
+        <div class="form-step-title">Data Diri</div>
+        <div class="form-step-desc">Isi data diri sesuai KTP untuk proses verifikasi.</div>
+
+        <div class="field-group">
+          <label>Nama lengkap <span class="req">*</span></label>
+          <input type="text" placeholder="Sesuai KTP" id="inv-nama">
+          <div class="field-error"><i class="ti ti-alert-circle"></i> Nama lengkap wajib diisi</div>
+        </div>
+        <div class="form-row">
+          <div class="field-group">
+            <label>Email <span class="req">*</span></label>
+            <input type="email" placeholder="nama@email.com" id="inv-email">
+            <div class="field-error"><i class="ti ti-alert-circle"></i> Masukkan email yang valid</div>
+          </div>
+          <div class="field-group">
+            <label>Nomor HP <span class="req">*</span></label>
+            <input type="text" placeholder="08xx-xxxx-xxxx" id="inv-hp">
+            <div class="field-error"><i class="ti ti-alert-circle"></i> Nomor HP wajib diisi</div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Kata sandi <span class="req">*</span></label>
+          <div class="password-wrap">
+            <input type="password" placeholder="Minimal 8 karakter" id="inv-password">
+            <button type="button" class="password-toggle" onclick="togglePw(this)"><i class="ti ti-eye"></i></button>
+          </div>
+          <div class="field-hint">Gunakan kombinasi huruf, angka, dan simbol.</div>
+        </div>
+        <div class="form-row">
+          <div class="field-group">
+            <label>Tanggal lahir <span class="req">*</span></label>
+            <input type="date" id="inv-tgl">
+          </div>
+          <div class="field-group">
+            <label>Kota domisili <span class="req">*</span></label>
+            <input type="text" placeholder="Contoh: Jakarta Selatan" id="inv-kota">
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Alamat lengkap <span class="req">*</span></label>
+          <textarea rows="2" placeholder="Sesuai KTP"></textarea>
+        </div>
+
+        <div class="form-nav" style="justify-content:flex-end">
+          <button class="btn btn-primary" onclick="nextStep('investor')">Lanjut ke Dokumen KYC <i class="ti ti-arrow-right"></i></button>
+        </div>
+      </div>
+
+      <div class="form-step" data-form-step="2" data-group="investor">
+        <div class="form-step-title">Dokumen KYC</div>
+        <div class="form-step-desc">Upload dokumen untuk verifikasi identitas. Tim kami memproses dalam 1×24 jam.</div>
+
+        <div class="field-group">
+          <label>Foto KTP <span class="req">*</span></label>
+          <div class="dropzone" onclick="fakeUpload(this, 'ktp-investor.jpg')">
+            <i class="ti ti-id-badge-2"></i>
+            <div class="dropzone-text">Klik atau drag foto KTP ke sini</div>
+            <div class="dropzone-hint">JPG atau PNG, maks 5MB, pastikan seluruh sisi KTP terlihat jelas</div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Selfie sambil memegang KTP <span class="req">*</span></label>
+          <div class="dropzone" onclick="fakeUpload(this, 'selfie-ktp.jpg')">
+            <i class="ti ti-camera-selfie"></i>
+            <div class="dropzone-text">Klik atau drag foto selfie ke sini</div>
+            <div class="dropzone-hint">Pastikan wajah dan KTP terlihat jelas dalam satu foto</div>
+          </div>
+        </div>
+
+        <div class="form-nav">
+          <button class="btn btn-ghost" onclick="prevStep('investor')"><i class="ti ti-arrow-left"></i> Kembali</button>
+          <button class="btn btn-primary" onclick="nextStep('investor')">Lanjut ke Review <i class="ti ti-arrow-right"></i></button>
+        </div>
+      </div>
+
+      <div class="form-step" data-form-step="3" data-group="investor">
+        <div class="form-step-title">Review Pendaftaran</div>
+        <div class="form-step-desc">Periksa kembali data sebelum mengirim pendaftaran.</div>
+
+        <div class="review-block">
+          <div class="review-block-title"><i class="ti ti-user"></i> Data Diri</div>
+          <div class="review-row"><span>Nama lengkap</span><span id="rev-nama">—</span></div>
+          <div class="review-row"><span>Email</span><span id="rev-email">—</span></div>
+          <div class="review-row"><span>Nomor HP</span><span id="rev-hp">—</span></div>
+          <div class="review-row"><span>Kota domisili</span><span id="rev-kota">—</span></div>
+        </div>
+        <div class="review-block">
+          <div class="review-block-title"><i class="ti ti-files"></i> Dokumen</div>
+          <div class="review-row"><span>Foto KTP</span><span><i class="ti ti-circle-check" style="color:var(--success)"></i> Terupload</span></div>
+          <div class="review-row"><span>Selfie + KTP</span><span><i class="ti ti-circle-check" style="color:var(--success)"></i> Terupload</span></div>
+        </div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="agree-investor">
+          <label for="agree-investor">Saya menyatakan data di atas benar dan menyetujui <a href="#">Syarat & Ketentuan</a> serta <a href="#">Kebijakan Privasi</a> MicroInvest.</label>
+        </div>
+
+        <div class="form-nav">
+          <button class="btn btn-ghost" onclick="prevStep('investor')"><i class="ti ti-arrow-left"></i> Kembali</button>
+          <button class="btn btn-primary" onclick="submitForm('investor')">Kirim Pendaftaran <i class="ti ti-send"></i></button>
+        </div>
+      </div>
+
+      <div class="form-step" data-form-step="success" data-group="investor">
+        <div class="success-wrap">
+          <div class="success-icon"><i class="ti ti-circle-check"></i></div>
+          <div class="success-title">Pendaftaran terkirim!</div>
+          <div class="success-desc">Data dan dokumenmu sedang kami verifikasi. Proses ini biasanya selesai dalam 1×24 jam — kamu akan menerima email begitu akun terverifikasi.</div>
+          <div class="success-info"><i class="ti ti-mail"></i> Cek email secara berkala untuk update status</div>
+          <a href="#" class="btn btn-primary">Kembali ke Beranda</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="form-umkm" style="display:none">
+    <div class="stepper" id="stepper-umkm">
+      <div class="step active" data-step="1"><div class="step-circle">1</div><div class="step-label">Info Usaha</div><div class="step-line"></div></div>
+      <div class="step" data-step="2"><div class="step-circle">2</div><div class="step-label">Info Pendanaan</div><div class="step-line"></div></div>
+      <div class="step" data-step="3"><div class="step-circle">3</div><div class="step-label">Dokumen</div><div class="step-line"></div></div>
+      <div class="step" data-step="4"><div class="step-circle">4</div><div class="step-label">Review</div><div class="step-line"></div></div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-step active" data-form-step="1" data-group="umkm">
+        <div class="form-step-title">Informasi Usaha</div>
+        <div class="form-step-desc">Ceritakan tentang usahamu kepada calon investor.</div>
+
+        <div class="field-group">
+          <label>Nama usaha <span class="req">*</span></label>
+          <input type="text" placeholder="Contoh: Warung Makan Bu Sari" id="umkm-nama">
+          <div class="field-error"><i class="ti ti-alert-circle"></i> Nama usaha wajib diisi</div>
+        </div>
+        <div class="form-row">
+          <div class="field-group">
+            <label>Kategori usaha <span class="req">*</span></label>
+            <select id="umkm-kategori">
+              <option value="">Pilih kategori</option>
+              <option>Kuliner</option>
+              <option>Fashion</option>
+              <option>Otomotif</option>
+              <option>Kerajinan</option>
+              <option>Jasa</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label>Kota usaha <span class="req">*</span></label>
+            <input type="text" placeholder="Contoh: Yogyakarta">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field-group">
+            <label>Tahun berdiri <span class="req">*</span></label>
+            <input type="number" placeholder="Contoh: 2018">
+          </div>
+          <div class="field-group">
+            <label>Jumlah karyawan</label>
+            <input type="number" placeholder="Contoh: 12">
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Deskripsi usaha <span class="req">*</span></label>
+          <textarea rows="3" placeholder="Ceritakan produk, layanan, dan keunikan usahamu"></textarea>
+        </div>
+        <div class="field-group">
+          <label>Email &amp; kata sandi akun <span class="req">*</span></label>
+          <div class="form-row">
+            <input type="email" placeholder="Email pemilik usaha">
+            <div class="password-wrap">
+              <input type="password" placeholder="Kata sandi">
+              <button type="button" class="password-toggle" onclick="togglePw(this)"><i class="ti ti-eye"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-nav" style="justify-content:flex-end">
+          <button class="btn btn-primary" onclick="nextStep('umkm')">Lanjut ke Info Pendanaan <i class="ti ti-arrow-right"></i></button>
+        </div>
+      </div>
+
+      <div class="form-step" data-form-step="2" data-group="umkm">
+        <div class="form-step-title">Informasi Pendanaan</div>
+        <div class="form-step-desc">Tentukan target dana dan skema bagi hasil untuk investor.</div>
+
+        <div class="form-row">
+          <div class="field-group">
+            <label>Target dana <span class="req">*</span></label>
+            <input type="text" placeholder="Contoh: 30.000.000" id="umkm-target">
+            <div class="field-hint">Nominal dalam Rupiah</div>
+          </div>
+          <div class="field-group">
+            <label>Tenor (bulan) <span class="req">*</span></label>
+            <input type="number" placeholder="Contoh: 12">
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Persentase bagi hasil untuk investor <span class="req">*</span></label>
+          <input type="text" placeholder="Contoh: 30" id="umkm-persen">
+          <div class="field-hint">Persentase dari keuntungan bersih bulanan yang dibagikan ke seluruh investor secara proporsional</div>
+        </div>
+        <div class="field-group">
+          <label>Estimasi omzet bulanan</label>
+          <input type="text" placeholder="Contoh: 85.000.000">
+        </div>
+
+        <div class="form-nav">
+          <button class="btn btn-ghost" onclick="prevStep('umkm')"><i class="ti ti-arrow-left"></i> Kembali</button>
+          <button class="btn btn-primary" onclick="nextStep('umkm')">Lanjut ke Dokumen <i class="ti ti-arrow-right"></i></button>
+        </div>
+      </div>
+
+      <div class="form-step" data-form-step="3" data-group="umkm">
+        <div class="form-step-title">Dokumen Legalitas &amp; Keuangan</div>
+        <div class="form-step-desc">Semua dokumen akan direview tim kami sebelum campaign tampil di platform.</div>
+
+        <div class="upload-grid">
+          <div class="field-group">
+            <label>NIB (Nomor Induk Berusaha) <span class="req">*</span></label>
+            <div class="dropzone" onclick="fakeUpload(this, 'nib-usaha.pdf')">
+              <i class="ti ti-file-certificate"></i>
+              <div class="dropzone-text">Upload NIB</div>
+              <div class="dropzone-hint">PDF atau JPG, maks 5MB</div>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>KTP Pemilik Usaha <span class="req">*</span></label>
+            <div class="dropzone" onclick="fakeUpload(this, 'ktp-pemilik.jpg')">
+              <i class="ti ti-id-badge-2"></i>
+              <div class="dropzone-text">Upload KTP</div>
+              <div class="dropzone-hint">JPG atau PNG, maks 5MB</div>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Laporan Keuangan 3 Bulan Terakhir <span class="req">*</span></label>
+            <div class="dropzone" onclick="fakeUpload(this, 'laporan-keuangan.pdf')">
+              <i class="ti ti-chart-bar"></i>
+              <div class="dropzone-text">Upload laporan keuangan</div>
+              <div class="dropzone-hint">PDF, maks 5MB</div>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Foto Usaha <span class="req">*</span></label>
+            <div class="dropzone" onclick="fakeUpload(this, 'foto-usaha (5 file).jpg')">
+              <i class="ti ti-photo"></i>
+              <div class="dropzone-text">Upload foto usaha</div>
+              <div class="dropzone-hint">Bisa lebih dari 1 file, maks 5MB per file</div>
+            </div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Surat Perjanjian Bermaterai <span class="req">*</span></label>
+          <div class="dropzone" onclick="fakeUpload(this, 'surat-perjanjian.pdf')">
+            <i class="ti ti-file-text"></i>
+            <div class="dropzone-text">Upload surat perjanjian</div>
+            <div class="dropzone-hint">Template bisa diunduh <a href="#" onclick="event.stopPropagation()">di sini</a> — PDF, maks 5MB</div>
+          </div>
+        </div>
+
+        <div class="form-nav">
+          <button class="btn btn-ghost" onclick="prevStep('umkm')"><i class="ti ti-arrow-left"></i> Kembali</button>
+          <button class="btn btn-primary" onclick="nextStep('umkm')">Lanjut ke Review <i class="ti ti-arrow-right"></i></button>
+        </div>
+      </div>
+
+      <div class="form-step" data-form-step="4" data-group="umkm">
+        <div class="form-step-title">Review Pendaftaran</div>
+        <div class="form-step-desc">Periksa kembali data sebelum mengirim ke tim review.</div>
+
+        <div class="review-block">
+          <div class="review-block-title"><i class="ti ti-building-store"></i> Info Usaha</div>
+          <div class="review-row"><span>Nama usaha</span><span id="rev-umkm-nama">—</span></div>
+          <div class="review-row"><span>Kategori</span><span id="rev-umkm-kategori">—</span></div>
+        </div>
+        <div class="review-block">
+          <div class="review-block-title"><i class="ti ti-cash"></i> Pendanaan</div>
+          <div class="review-row"><span>Target dana</span><span id="rev-umkm-target">—</span></div>
+          <div class="review-row"><span>Bagi hasil investor</span><span id="rev-umkm-persen">—</span></div>
+        </div>
+        <div class="review-block">
+          <div class="review-block-title"><i class="ti ti-files"></i> Dokumen</div>
+          <div class="review-row"><span>NIB</span><span><i class="ti ti-circle-check" style="color:var(--success)"></i> Terupload</span></div>
+          <div class="review-row"><span>KTP Pemilik</span><span><i class="ti ti-circle-check" style="color:var(--success)"></i> Terupload</span></div>
+          <div class="review-row"><span>Laporan Keuangan</span><span><i class="ti ti-circle-check" style="color:var(--success)"></i> Terupload</span></div>
+          <div class="review-row"><span>Foto Usaha</span><span><i class="ti ti-circle-check" style="color:var(--success)"></i> Terupload</span></div>
+          <div class="review-row"><span>Surat Perjanjian</span><span><i class="ti ti-circle-check" style="color:var(--success)"></i> Terupload</span></div>
+        </div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="agree-umkm">
+          <label for="agree-umkm">Saya menyatakan seluruh data dan dokumen di atas benar, dan menyetujui <a href="#">Syarat & Ketentuan</a> serta <a href="#">Perjanjian Kemitraan</a> MicroInvest.</label>
+        </div>
+
+        <div class="form-nav">
+          <button class="btn btn-ghost" onclick="prevStep('umkm')"><i class="ti ti-arrow-left"></i> Kembali</button>
+          <button class="btn btn-primary" onclick="submitForm('umkm')">Kirim Pendaftaran <i class="ti ti-send"></i></button>
+        </div>
+      </div>
+
+      <div class="form-step" data-form-step="success" data-group="umkm">
+        <div class="success-wrap">
+          <div class="success-icon"><i class="ti ti-circle-check"></i></div>
+          <div class="success-title">Pendaftaran usaha terkirim!</div>
+          <div class="success-desc">Tim kami akan meninjau data dan dokumen usahamu. Setelah disetujui, campaign akan tampil di platform dan bisa mulai menerima investasi.</div>
+          <div class="success-info"><i class="ti ti-mail"></i> Kami akan mengirim email begitu status pendaftaran berubah</div>
+          <a href="#" class="btn btn-primary">Kembali ke Beranda</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="login-link">Sudah punya akun? <a href="#">Masuk di sini</a></div>
+
+</div>
+
+<script>
+  function switchRole(role){
+    document.getElementById('role-investor').classList.toggle('active', role==='investor');
+    document.getElementById('role-umkm').classList.toggle('active', role==='umkm');
+    document.getElementById('form-investor').style.display = role==='investor' ? 'block' : 'none';
+    document.getElementById('form-umkm').style.display = role==='umkm' ? 'block' : 'none';
+  }
+
+  function togglePw(btn){
+    const input = btn.previousElementSibling;
+    const icon = btn.querySelector('i');
+    if(input.type === 'password'){ input.type='text'; icon.className='ti ti-eye-off'; }
+    else { input.type='password'; icon.className='ti ti-eye'; }
+  }
+
+  function fakeUpload(el, filename){
+    el.classList.add('filled');
+    const existing = el.querySelector('.dropzone-filename');
+    if(existing) existing.remove();
+    const div = document.createElement('div');
+    div.className = 'dropzone-filename';
+    div.innerHTML = '<i class="ti ti-paperclip"></i> ' + filename;
+    el.appendChild(div);
+  }
+
+  function getStepEls(group){
+    return {
+      steps: document.querySelectorAll(`.form-step[data-group="${group}"]`),
+      stepperItems: document.querySelectorAll(`#stepper-${group} .step`)
+    };
+  }
+
+  function goToStep(group, stepNum){
+    const { steps, stepperItems } = getStepEls(group);
+    steps.forEach(s => s.classList.toggle('active', s.dataset.formStep === String(stepNum)));
+    stepperItems.forEach(s => {
+      const n = Number(s.dataset.step);
+      s.classList.remove('active','done');
+      if(n < stepNum) s.classList.add('done');
+      if(n === stepNum) s.classList.add('active');
+    });
+  }
+
+  const currentStep = { investor: 1, umkm: 1 };
+  const maxStep = { investor: 3, umkm: 4 };
+
+  function nextStep(group){
+    if(currentStep[group] < maxStep[group]){
+      currentStep[group]++;
+      goToStep(group, currentStep[group]);
+    }
+  }
+  function prevStep(group){
+    if(currentStep[group] > 1){
+      currentStep[group]--;
+      goToStep(group, currentStep[group]);
+    }
+  }
+
+  function submitForm(group){
+    if(group === 'investor'){
+      document.getElementById('rev-nama').textContent = document.getElementById('inv-nama').value || '—';
+      document.getElementById('rev-email').textContent = document.getElementById('inv-email').value || '—';
+      document.getElementById('rev-hp').textContent = document.getElementById('inv-hp').value || '—';
+      document.getElementById('rev-kota').textContent = document.getElementById('inv-kota').value || '—';
+    } else {
+      document.getElementById('rev-umkm-nama').textContent = document.getElementById('umkm-nama').value || '—';
+      document.getElementById('rev-umkm-kategori').textContent = document.getElementById('umkm-kategori').value || '—';
+      document.getElementById('rev-umkm-target').textContent = 'Rp ' + (document.getElementById('umkm-target').value || '—');
+      document.getElementById('rev-umkm-persen').textContent = (document.getElementById('umkm-persen').value || '—') + '%';
+    }
+    const { steps, stepperItems } = getStepEls(group);
+    steps.forEach(s => s.classList.toggle('active', s.dataset.formStep === 'success'));
+    stepperItems.forEach(s => s.classList.add('done'));
+  }
+</script>
+</body>
+</html>
