@@ -22,6 +22,8 @@ class RegisterInvestorRequest extends FormRequest
             'kota_domisili' => ['required', 'string', 'max:255'],
             'alamat' => ['required', 'string'],
             'no_ktp' => ['required', 'string', 'max:32', 'unique:investors,no_ktp'],
+            'bank' => ['required', 'string', 'max:100'],
+            'no_rekening' => ['required', 'string', 'max:50'],
             'ktp' => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
             'selfie' => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
         ];
@@ -41,6 +43,8 @@ class RegisterInvestorRequest extends FormRequest
             'alamat.required' => 'Alamat lengkap wajib diisi',
             'no_ktp.required' => 'Nomor KTP wajib diisi',
             'no_ktp.unique' => 'Nomor KTP ini sudah terdaftar',
+            'bank.required' => 'Bank wajib dipilih',
+            'no_rekening.required' => 'Nomor rekening wajib diisi',
             'ktp.required' => 'Foto KTP wajib diupload',
             'ktp.mimes' => 'Format file harus JPG atau PNG',
             'ktp.max' => 'Ukuran file maksimal 5MB. Kompres dulu atau pilih file lain.',

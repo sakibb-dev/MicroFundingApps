@@ -26,5 +26,7 @@ class DatabaseSeeder extends Seeder
                 'role' => UserRole::Admin,
             ]
         );
+
+        $this->call(PlatformSettingSeeder::class);
     }
 }

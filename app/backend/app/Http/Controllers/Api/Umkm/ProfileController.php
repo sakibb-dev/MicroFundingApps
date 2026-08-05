@@ -22,6 +22,8 @@ class ProfileController extends Controller
             'kategori' => ['sometimes', 'string', 'max:100'],
             'kota' => ['sometimes', 'string', 'max:255'],
             'deskripsi' => ['sometimes', 'string', 'min:10'],
+            'bank' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'no_rekening' => ['sometimes', 'nullable', 'string', 'max:50'],
         ]);
 
         $request->user()->umkm->update($data);

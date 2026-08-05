@@ -11,7 +11,6 @@ import { useToast } from '../../context/ToastContext';
 const ROLES = [
   { key: 'investor', label: 'Investor', home: '/investor' },
   { key: 'umkm', label: 'UMKM', home: '/umkm' },
-  { key: 'admin', label: 'Admin', home: '/admin' },
 ];
 
 const schema = z.object({

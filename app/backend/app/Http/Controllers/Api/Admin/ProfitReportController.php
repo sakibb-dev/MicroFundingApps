@@ -21,7 +21,7 @@ class ProfitReportController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = ProfitReport::with('umkm');
+        $query = ProfitReport::with('umkm')->withCount('distributions');
 
         if ($status = $request->query('status')) {
             $query->where('status', $status);

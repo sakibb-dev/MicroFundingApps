@@ -1,27 +1,35 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Input, TextArea, FileUpload, Button, ConfirmDialog, Badge, Table, Th, Td } from '../../components/ui';
+import { Card, Input, TextArea, FileUpload, Button, ConfirmDialog, Badge, Table, Th, Td, EmptyState, Skeleton } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
-import { formatCurrency, formatNumberInput, parseCurrencyInput, maskName } from '../../utils/format';
-import { getCurrentPeriodInput, getInvestorList } from '../../mocks/umkm';
+import { formatCurrency, formatNumberInput, parseCurrencyInput, formatPeriode } from '../../utils/format';
+import { useUmkmDashboard, useUmkmInvestorList, useSubmitProfitReport, usePlatformFeeInfo } from '../../api/umkm';
 
 const VISIBLE_BREAKDOWN_COUNT = 3;
 
 export default function PengajuanBagiHasil() {
   const toast = useToast();
   const navigate = useNavigate();
-  const period = getCurrentPeriodInput();
-  const investors = getInvestorList();
+  const { data: dashboard, isLoading: dashboardLoading } = useUmkmDashboard();
+  const { data: investorData, isLoading: investorsLoading } = useUmkmInvestorList();
+  const { data: feeInfo, isLoading: feeLoading } = usePlatformFeeInfo();
+  const submitReport = useSubmitProfitReport();
 
-  const [kotor, setKotor] = useState(period.keuntunganKotor);
-  const [ops, setOps] = useState(period.biayaOperasional);
+  const investors = investorData || [];
+  const persenBagiHasil = dashboard?.umkm?.persen_bagi_hasil ?? 0;
+  const totalDanaTerkumpul = dashboard?.umkm?.total_terkumpul ?? 0;
+  // Live preview only -- the authoritative fee % snapshot is taken
+  // server-side on submit by ProfitSharingCalculatorService.
+  const feePlatformPercent = feeInfo?.fee_platform_percent ?? 0;
+
+  const [kotor, setKotor] = useState(0);
+  const [ops, setOps] = useState(0);
   const [laporanFile, setLaporanFile] = useState(null);
   const [laporanError, setLaporanError] = useState('');
   const [catatan, setCatatan] = useState('');
   const [confirmChecked, setConfirmChecked] = useState(false);
   const [confirmCheckError, setConfirmCheckError] = useState('');
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   // Formula (MICROINVEST_CONTEXT.md section 3):
   //   Keuntungan Bersih = Keuntungan Kotor - Biaya Operasional
@@ -32,15 +40,15 @@ export default function PengajuanBagiHasil() {
   const calc = useMemo(() => {
     const bersih = kotor - ops;
     const isNegative = bersih < 0;
-    const totalBagiHasilInvestor = isNegative ? 0 : Math.round(bersih * (period.persenBagiHasil / 100));
-    const feePlatform = isNegative ? 0 : Math.round(bersih * (period.feePlatformPercent / 100));
+    const totalBagiHasilInvestor = isNegative ? 0 : Math.round(bersih * (persenBagiHasil / 100));
+    const feePlatform = isNegative ? 0 : Math.round(bersih * (feePlatformPercent / 100));
     const totalDibayarkan = totalBagiHasilInvestor + feePlatform;
 
     const visibleInvestors = investors.slice(0, VISIBLE_BREAKDOWN_COUNT).map((inv) => ({
       ...inv,
-      bagiHasil: isNegative
+      bagiHasil: isNegative || totalDanaTerkumpul <= 0
         ? 0
-        : Math.round((inv.nominal / period.totalDanaTerkumpul) * totalBagiHasilInvestor),
+        : Math.round((inv.nominal / totalDanaTerkumpul) * totalBagiHasilInvestor),
     }));
     const visibleSum = visibleInvestors.reduce((sum, inv) => sum + inv.bagiHasil, 0);
     const remainingCount = investors.length - visibleInvestors.length;
@@ -49,7 +57,7 @@ export default function PengajuanBagiHasil() {
     const remainingSum = totalBagiHasilInvestor - visibleSum;
 
     return { bersih, isNegative, totalBagiHasilInvestor, feePlatform, totalDibayarkan, visibleInvestors, remainingCount, remainingSum };
-  }, [kotor, ops, investors, period]);
+  }, [kotor, ops, investors, persenBagiHasil, totalDanaTerkumpul, feePlatformPercent]);
 
   function handleFileChange(file) {
     setLaporanFile(file);
@@ -73,14 +81,45 @@ export default function PengajuanBagiHasil() {
   }
 
   function handleConfirmSubmit() {
-    setSubmitting(true);
-    // Placeholder for the real submit API call.
-    setTimeout(() => {
-      setSubmitting(false);
-      setConfirmDialogOpen(false);
-      toast.success(`Pengajuan bagi hasil periode ${period.periode} terkirim. Menunggu review admin.`);
-      navigate('/umkm/riwayat');
-    }, 500);
+    const formData = new FormData();
+    formData.append('keuntungan_kotor', kotor);
+    formData.append('biaya_operasional', ops);
+    formData.append('laporan_keuangan', laporanFile);
+    formData.append('konfirmasi', '1');
+    if (catatan) formData.append('catatan', catatan);
+
+    submitReport.mutate(formData, {
+      onSuccess: (res) => {
+        setConfirmDialogOpen(false);
+        toast.success(res.message || 'Pengajuan bagi hasil terkirim. Menunggu review admin.');
+        navigate('/umkm/riwayat');
+      },
+      onError: (err) => {
+        setConfirmDialogOpen(false);
+        const msg = err?.response?.data?.errors
+          ? Object.values(err.response.data.errors)[0]?.[0]
+          : err?.response?.data?.message;
+        toast.error(msg || 'Gagal mengirim pengajuan. Coba lagi.');
+      },
+    });
+  }
+
+  if (dashboardLoading || investorsLoading || feeLoading) {
+    return <Skeleton className="h-[500px] w-full max-w-[680px]" />;
+  }
+
+  if (dashboard?.sudah_submit_periode_ini) {
+    return (
+      <Card className="max-w-[680px]">
+        <EmptyState
+          title="Sudah disubmit"
+          body={`Pengajuan bagi hasil periode ${formatPeriode(dashboard.periode_berjalan)} sudah dikirim dan sedang direview admin.`}
+          ctaLabel="Lihat riwayat"
+          onCta={() => navigate('/umkm/riwayat')}
+          tone="teal"
+        />
+      </Card>
+    );
   }
 
   return (
@@ -89,7 +128,7 @@ export default function PengajuanBagiHasil() {
         <div>
           <div className="text-xs text-neutral-500 mb-1">Dashboard / Pengajuan Bagi Hasil</div>
           <div className="text-xl font-extrabold text-neutral-900 tracking-tight">
-            Pengajuan Bagi Hasil &mdash; {period.periode}
+            Pengajuan Bagi Hasil &mdash; {formatPeriode(dashboard?.periode_berjalan)}
           </div>
         </div>
         <Badge variant="warning" tone="teal">
@@ -102,7 +141,7 @@ export default function PengajuanBagiHasil() {
           <div className="text-[15px] font-bold text-neutral-900 mb-4">1. Input keuangan</div>
 
           <div className="grid sm:grid-cols-2 gap-x-4">
-            <Input id="periode" label="Periode" value={period.periode} disabled />
+            <Input id="periode" label="Periode" value={formatPeriode(dashboard?.periode_berjalan)} disabled />
             <Input
               id="kotor"
               label="Keuntungan kotor bulan ini (Rp)"
@@ -141,7 +180,7 @@ export default function PengajuanBagiHasil() {
               <strong className="text-teal-800">{formatCurrency(calc.bersih)}</strong>
             </div>
             <div className="flex justify-between text-[13px] text-neutral-700 mb-2">
-              <span>Total bagi hasil investor ({period.persenBagiHasil}%)</span>
+              <span>Total bagi hasil investor ({persenBagiHasil}%)</span>
               <strong className="text-teal-800">{formatCurrency(calc.totalBagiHasilInvestor)}</strong>
             </div>
 
@@ -157,11 +196,11 @@ export default function PengajuanBagiHasil() {
                 </tr>
               </thead>
               <tbody>
-                {calc.visibleInvestors.map((inv) => (
-                  <tr key={inv.id}>
-                    <Td>{maskName(inv.nama)}</Td>
+                {calc.visibleInvestors.map((inv, i) => (
+                  <tr key={i}>
+                    <Td>{inv.nama}</Td>
                     <Td>{formatCurrency(inv.nominal)}</Td>
-                    <Td>{((inv.nominal / period.totalDanaTerkumpul) * 100).toFixed(1)}%</Td>
+                    <Td>{inv.persen_kepemilikan}%</Td>
                     <Td>{formatCurrency(inv.bagiHasil)}</Td>
                   </tr>
                 ))}
@@ -179,7 +218,7 @@ export default function PengajuanBagiHasil() {
             <hr className="border-t border-black/5 my-2.5" />
 
             <div className="flex justify-between text-[13px] text-neutral-700 mb-2">
-              <span>Fee platform ({period.feePlatformPercent}%)</span>
+              <span>Fee platform ({feePlatformPercent}%)</span>
               <strong className="text-teal-800">{formatCurrency(calc.feePlatform)}</strong>
             </div>
             <div className="flex justify-between text-sm">
@@ -233,13 +272,13 @@ export default function PengajuanBagiHasil() {
 
       <ConfirmDialog
         open={confirmDialogOpen}
-        onClose={() => setConfirmDialogOpen(false)}
+        onClose={() => !submitReport.isPending && setConfirmDialogOpen(false)}
         onConfirm={handleConfirmSubmit}
         title="Kirim pengajuan bagi hasil?"
         description="Pastikan data keuangan dan dokumen yang kamu unggah sudah benar. Setelah dikirim, pengajuan akan masuk antrian review admin dan tidak bisa diedit."
         confirmLabel="Kirim Pengajuan"
         tone="teal"
-        loading={submitting}
+        loading={submitReport.isPending}
       />
     </div>
   );

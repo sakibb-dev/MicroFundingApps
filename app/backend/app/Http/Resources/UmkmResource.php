@@ -43,6 +43,13 @@ class UmkmResource extends JsonResource
                     'persen_kepemilikan' => (float) $inv->persen_kepemilikan,
                     'tanggal' => $inv->confirmed_at?->toDateString(),
                 ])->values()),
+            // Private account details -- only the UMKM owner or an admin
+            // ever needs this (admin to send funds, owner to manage it).
+            // Never exposed to investors browsing campaigns.
+            'rekening' => $this->when(
+                $request->user()?->role->value === 'admin' || $request->user()?->id === $this->user_id,
+                fn () => ['bank' => $this->bank, 'no_rekening' => $this->no_rekening],
+            ),
             'created_at' => $this->created_at,
         ];
     }

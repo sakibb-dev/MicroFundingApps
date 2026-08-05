@@ -90,4 +90,26 @@ class InvestmentController extends Controller
 
         return ApiResponse::success('Investasi ditolak.');
     }
+
+    /**
+     * Records that the admin has manually wired the confirmed capital on to
+     * the UMKM's bank account -- this leg happens outside the app (there's
+     * no payment gateway), this just closes the audit trail for it.
+     */
+    public function forward(Request $request, Investment $investment): JsonResponse
+    {
+        if ($investment->status !== InvestmentStatus::Confirmed) {
+            return ApiResponse::error('Investasi ini belum dikonfirmasi atau sudah diteruskan sebelumnya.', null, null, 422);
+        }
+
+        $request->validate(['catatan' => ['nullable', 'string', 'max:1000']]);
+
+        $investment->update([
+            'status' => InvestmentStatus::Active,
+            'forwarded_at' => now(),
+            'admin_notes' => $request->input('catatan'),
+        ]);
+
+        return ApiResponse::success('Dana berhasil dicatat sebagai diteruskan ke UMKM.');
+    }
 }

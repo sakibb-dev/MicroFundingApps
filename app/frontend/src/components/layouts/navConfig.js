@@ -12,6 +12,7 @@ import {
   IconIdBadge2,
   IconCurrencyDollar,
   IconReport,
+  IconSettings,
 } from '@tabler/icons-react';
 
 export const investorNav = [
@@ -30,11 +31,15 @@ export const umkmNav = [
   { to: '/umkm/profil-usaha', label: 'Profil Usaha', icon: IconBuildingStore },
 ];
 
+// badgeKey references a field on the admin dashboard metrics response
+// (see api/admin.js useAdminDashboard) -- badges are resolved to real
+// pending counts at render time in App.jsx, never hardcoded here.
 export const adminNav = [
-  { to: '/admin', label: 'Dashboard', icon: IconLayoutDashboard, end: true },
-  { to: '/admin/kyc', label: 'Manajemen KYC', icon: IconIdBadge2, badge: 5 },
-  { to: '/admin/umkm', label: 'Manajemen UMKM', icon: IconBuildingStore, badge: 2 },
-  { to: '/admin/transaksi', label: 'Transaksi', icon: IconArrowsExchange, badge: 8 },
-  { to: '/admin/bagi-hasil', label: 'Bagi Hasil', icon: IconCurrencyDollar, badge: 3 },
-  { to: '/admin/laporan', label: 'Laporan', icon: IconReport },
+  { to: '/admin-panel', label: 'Dashboard', icon: IconLayoutDashboard, end: true },
+  { to: '/admin-panel/kyc', label: 'Manajemen KYC', icon: IconIdBadge2, badgeKey: 'pending_kyc' },
+  { to: '/admin-panel/umkm', label: 'Manajemen UMKM', icon: IconBuildingStore, badgeKey: 'pending_umkm' },
+  { to: '/admin-panel/transaksi', label: 'Transaksi', icon: IconArrowsExchange, badgeKey: 'pending_transfer' },
+  { to: '/admin-panel/bagi-hasil', label: 'Bagi Hasil', icon: IconCurrencyDollar, badgeKey: 'pending_profit_reports' },
+  { to: '/admin-panel/laporan', label: 'Laporan', icon: IconReport },
+  { to: '/admin-panel/settings', label: 'Pengaturan', icon: IconSettings },
 ];

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 
 // Bahasa Indonesia copy per context-backend-and-system/PROMPT_FEEDBACK_SYSTEM.md section 2.
@@ -17,6 +17,7 @@ const MESSAGES = {
 export default function ApiErrorBridge() {
   const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     function handleApiError(e) {
@@ -27,14 +28,17 @@ export default function ApiErrorBridge() {
       }
       if (type === 'unauthorized') {
         toast.error(MESSAGES.unauthorized);
-        navigate('/masuk');
+        // Bounce back to whichever login gate matches where the session
+        // died -- the admin one is unlisted, so a blanket redirect to
+        // /masuk would strand an expired admin session with no way back.
+        navigate(location.pathname.startsWith('/admin-panel') ? '/admin-panel/login' : '/masuk');
         return;
       }
       if (MESSAGES[type]) toast.error(MESSAGES[type]);
     }
     window.addEventListener('api-error', handleApiError);
     return () => window.removeEventListener('api-error', handleApiError);
-  }, [toast, navigate]);
+  }, [toast, navigate, location.pathname]);
 
   return null;
 }

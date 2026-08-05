@@ -1,43 +1,62 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { IconArrowsExchange, IconPaperclip } from '@tabler/icons-react';
-import { Card, Chip, TextArea, Button, Badge, Table, Th, Td, ConfirmDialog, Modal, EmptyState } from '../../components/ui';
+import { Card, Chip, TextArea, Button, Badge, Table, Th, Td, ConfirmDialog, Modal, EmptyState, SkeletonTable } from '../../components/ui';
 import { formatCurrency } from '../../utils/format';
-import { getTransaksiList } from '../../mocks/admin';
+import { useAdminInvestmentList, useConfirmInvestment, useRejectInvestment, useForwardInvestment } from '../../api/admin';
 import { useToast } from '../../context/ToastContext';
 
 const STATUS_BADGE = {
-  pending: { variant: 'warning', label: 'Pending' },
-  confirmed: { variant: 'success', label: 'Terkonfirmasi' },
+  pending_confirmation: { variant: 'warning', label: 'Pending' },
+  confirmed: { variant: 'warning', label: 'Belum Diteruskan' },
+  active: { variant: 'success', label: 'Dana Diteruskan' },
   rejected: { variant: 'danger', label: 'Ditolak' },
 };
 
 const FILTERS = [
-  { key: 'pending', label: 'Pending' },
-  { key: 'confirmed', label: 'Terkonfirmasi' },
+  { key: 'pending_confirmation', label: 'Pending' },
+  { key: 'confirmed', label: 'Belum Diteruskan' },
+  { key: 'active', label: 'Dana Diteruskan' },
   { key: 'rejected', label: 'Ditolak' },
 ];
 
 export default function Transaksi() {
   const toast = useToast();
-  const [items, setItems] = useState(() => getTransaksiList());
-  const [filter, setFilter] = useState('pending');
+  const [filter, setFilter] = useState('pending_confirmation');
+  const { data, isLoading } = useAdminInvestmentList(filter);
+  const confirmInvestment = useConfirmInvestment();
+  const rejectInvestment = useRejectInvestment();
+  const forwardInvestment = useForwardInvestment();
+
+  const items = data || [];
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [rejectTarget, setRejectTarget] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [forwardTarget, setForwardTarget] = useState(null);
 
-  const pendingCount = items.filter((i) => i.status === 'pending').length;
+  const pendingCount = filter === 'pending_confirmation' ? items.length : undefined;
+  const submitting = confirmInvestment.isPending || rejectInvestment.isPending || forwardInvestment.isPending;
 
-  const filtered = useMemo(() => items.filter((i) => i.status === filter), [items, filter]);
+  function handleForward() {
+    forwardInvestment.mutate(
+      { investmentId: forwardTarget.id },
+      {
+        onSuccess: () => {
+          setForwardTarget(null);
+          toast.success('Dana berhasil dicatat sebagai diteruskan ke UMKM.');
+        },
+        onError: () => toast.error('Gagal mencatat pencairan dana. Coba lagi.'),
+      }
+    );
+  }
 
   function handleKonfirmasi() {
-    setSubmitting(true);
-    setTimeout(() => {
-      setItems((prev) => prev.map((i) => (i.id === confirmTarget.id ? { ...i, status: 'confirmed' } : i)));
-      setSubmitting(false);
-      setConfirmTarget(null);
-      toast.success('Transfer investasi dikonfirmasi. Invoice otomatis dikirim ke investor.');
-    }, 700);
+    confirmInvestment.mutate(confirmTarget.id, {
+      onSuccess: () => {
+        setConfirmTarget(null);
+        toast.success('Transfer investasi dikonfirmasi. Invoice otomatis dikirim ke investor.');
+      },
+      onError: () => toast.error('Gagal mengonfirmasi transfer. Coba lagi.'),
+    });
   }
 
   function openReject(item) {
@@ -50,13 +69,16 @@ export default function Transaksi() {
       toast.error('Isi alasan penolakan sebelum mengirim.');
       return;
     }
-    setSubmitting(true);
-    setTimeout(() => {
-      setItems((prev) => prev.map((i) => (i.id === rejectTarget.id ? { ...i, status: 'rejected' } : i)));
-      setSubmitting(false);
-      setRejectTarget(null);
-      toast.success('Bukti transfer ditolak dan investor diberi tahu.');
-    }, 700);
+    rejectInvestment.mutate(
+      { investmentId: rejectTarget.id, alasan: rejectReason },
+      {
+        onSuccess: () => {
+          setRejectTarget(null);
+          toast.success('Bukti transfer ditolak dan investor diberi tahu.');
+        },
+        onError: () => toast.error('Gagal menolak transaksi. Coba lagi.'),
+      }
+    );
   }
 
   return (
@@ -70,19 +92,21 @@ export default function Transaksi() {
         {FILTERS.map((f) => (
           <Chip key={f.key} tone="teal" active={filter === f.key} onClick={() => setFilter(f.key)}>
             {f.label}
-            {f.key === 'pending' ? ` (${pendingCount})` : ''}
+            {f.key === 'pending_confirmation' && pendingCount != null ? ` (${pendingCount})` : ''}
           </Chip>
         ))}
       </div>
 
       <Card padded={false}>
         <div className="p-3">
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <SkeletonTable rows={5} cols={6} />
+          ) : items.length === 0 ? (
             <EmptyState
               icon={IconArrowsExchange}
               title="Tidak ada transaksi"
               body={
-                filter === 'pending'
+                filter === 'pending_confirmation'
                   ? 'Tidak ada bukti transfer yang menunggu konfirmasi saat ini.'
                   : 'Belum ada transaksi dengan status ini.'
               }
@@ -100,16 +124,16 @@ export default function Transaksi() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((item) => {
-                  const badge = STATUS_BADGE[item.status];
+                {items.map((item) => {
+                  const badge = STATUS_BADGE[item.status] || STATUS_BADGE.pending_confirmation;
                   return (
                     <tr key={item.id}>
-                      <Td className="font-medium text-neutral-900">{item.investor}</Td>
-                      <Td className="text-neutral-500">{item.umkm}</Td>
+                      <Td className="font-medium text-neutral-900">{item.investor?.nama}</Td>
+                      <Td className="text-neutral-500">{item.umkm?.nama_usaha}</Td>
                       <Td className="whitespace-nowrap">{formatCurrency(item.nominal)}</Td>
                       <Td>
                         <span className="inline-flex items-center gap-1.5 text-neutral-500">
-                          <IconPaperclip size={14} aria-hidden="true" /> {item.bukti}
+                          <IconPaperclip size={14} aria-hidden="true" /> {item.bukti_transfer_path ? 'Terlampir' : '—'}
                         </span>
                       </Td>
                       <Td>
@@ -118,7 +142,7 @@ export default function Transaksi() {
                         </Badge>
                       </Td>
                       <Td>
-                        {item.status === 'pending' ? (
+                        {item.status === 'pending_confirmation' ? (
                           <div className="flex flex-wrap gap-2">
                             <Button variant="outline" tone="teal" size="sm" onClick={() => setConfirmTarget(item)}>
                               Konfirmasi
@@ -128,8 +152,8 @@ export default function Transaksi() {
                             </Button>
                           </div>
                         ) : item.status === 'confirmed' ? (
-                          <Button variant="ghost" tone="teal" size="sm" disabled>
-                            Lihat Invoice
+                          <Button variant="outline" tone="teal" size="sm" onClick={() => setForwardTarget(item)}>
+                            Tandai Diteruskan
                           </Button>
                         ) : (
                           <span className="text-[12px] text-neutral-400">—</span>
@@ -151,10 +175,25 @@ export default function Transaksi() {
         title="Konfirmasi transfer ini?"
         description={
           confirmTarget
-            ? `Transfer ${formatCurrency(confirmTarget.nominal)} dari ${confirmTarget.investor} ke ${confirmTarget.umkm} akan dikonfirmasi dan invoice otomatis dikirim ke investor.`
+            ? `Transfer ${formatCurrency(confirmTarget.nominal)} dari ${confirmTarget.investor?.nama} ke ${confirmTarget.umkm?.nama_usaha} akan dikonfirmasi dan invoice otomatis dikirim ke investor.`
             : ''
         }
         confirmLabel="Konfirmasi"
+        tone="teal"
+        loading={submitting}
+      />
+
+      <ConfirmDialog
+        open={!!forwardTarget}
+        onClose={() => !submitting && setForwardTarget(null)}
+        onConfirm={handleForward}
+        title="Catat dana sudah diteruskan ke UMKM?"
+        description={
+          forwardTarget
+            ? `Konfirmasi bahwa ${formatCurrency(forwardTarget.nominal)} sudah kamu transfer manual ke rekening ${forwardTarget.umkm?.nama_usaha}. Aksi ini hanya mencatat status di sistem, tidak memindahkan dana secara otomatis.`
+            : ''
+        }
+        confirmLabel="Sudah Diteruskan"
         tone="teal"
         loading={submitting}
       />
@@ -177,7 +216,7 @@ export default function Transaksi() {
       >
         <p className="text-sm text-neutral-700 mb-3">
           {rejectTarget
-            ? `Bukti transfer dari ${rejectTarget.investor} ke ${rejectTarget.umkm} akan ditolak.`
+            ? `Bukti transfer dari ${rejectTarget.investor?.nama} ke ${rejectTarget.umkm?.nama_usaha} akan ditolak.`
             : ''}
         </p>
         <TextArea

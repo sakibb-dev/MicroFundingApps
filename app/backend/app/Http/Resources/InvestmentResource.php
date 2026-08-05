@@ -11,6 +11,10 @@ class InvestmentResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'investor' => $this->whenLoaded('investor', fn () => [
+                'id' => $this->investor->id,
+                'nama' => $this->investor->user->name,
+            ]),
             'umkm' => $this->whenLoaded('umkm', fn () => [
                 'id' => $this->umkm->id,
                 'nama_usaha' => $this->umkm->nama_usaha,
@@ -21,6 +25,7 @@ class InvestmentResource extends JsonResource
             'status' => $this->status->value,
             'bukti_transfer_path' => $this->when($request->user()?->role->value === 'admin', $this->bukti_transfer_path),
             'confirmed_at' => $this->confirmed_at,
+            'forwarded_at' => $this->when($request->user()?->role->value === 'admin', $this->forwarded_at),
             'created_at' => $this->created_at,
         ];
     }

@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { IconArrowLeft, IconArrowRight, IconSend, IconIdBadge2, IconCameraSelfie, IconUser, IconFiles, IconCircleCheck } from '@tabler/icons-react';
-import { Card, Input, TextArea, FileUpload, Button } from '../../components/ui';
+import { IconArrowLeft, IconArrowRight, IconSend, IconUser, IconFiles, IconCircleCheck } from '@tabler/icons-react';
+import { Card, Input, TextArea, Select, CameraCapture, Button } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import api from '../../api/client';
+import { BANK_OPTIONS } from '../../utils/banks';
 import Stepper from './Stepper';
 import SuccessScreen from './SuccessScreen';
 
@@ -20,13 +21,15 @@ const schema = z.object({
   kotaDomisili: z.string().min(1, 'Kota domisili wajib diisi'),
   alamat: z.string().min(1, 'Alamat lengkap wajib diisi'),
   noKtp: z.string().min(10, 'Nomor KTP wajib diisi (16 digit)'),
+  bank: z.string().min(1, 'Bank wajib dipilih'),
+  noRekening: z.string().min(1, 'Nomor rekening wajib diisi'),
   ktpFile: z.any().refine((f) => !!f, 'Foto KTP wajib diupload'),
   selfieFile: z.any().refine((f) => !!f, 'Selfie wajib diupload'),
   agree: z.literal(true, { errorMap: () => ({ message: 'Kamu harus menyetujui Syarat & Ketentuan' }) }),
 });
 
 const STEP_FIELDS = [
-  ['namaLengkap', 'email', 'noHp', 'password', 'tanggalLahir', 'kotaDomisili', 'alamat', 'noKtp'],
+  ['namaLengkap', 'email', 'noHp', 'password', 'tanggalLahir', 'kotaDomisili', 'alamat', 'noKtp', 'bank', 'noRekening'],
   ['ktpFile', 'selfieFile'],
   ['agree'],
 ];
@@ -63,6 +66,7 @@ export default function InvestorRegisterForm() {
     tanggalLahir: 'tanggal_lahir',
     kotaDomisili: 'kota_domisili',
     noKtp: 'no_ktp',
+    noRekening: 'no_rekening',
   };
 
   async function onSubmit(data) {
@@ -77,6 +81,8 @@ export default function InvestorRegisterForm() {
       formData.append('kota_domisili', data.kotaDomisili);
       formData.append('alamat', data.alamat);
       formData.append('no_ktp', data.noKtp);
+      formData.append('bank', data.bank);
+      formData.append('no_rekening', data.noRekening);
       formData.append('ktp', data.ktpFile);
       formData.append('selfie', data.selfieFile);
 
@@ -86,11 +92,19 @@ export default function InvestorRegisterForm() {
     } catch (err) {
       if (err?.response?.status === 422) {
         const apiErrors = err.response.data?.errors || {};
-        Object.entries(apiErrors).forEach(([field, msgs]) => {
+        const formFields = Object.entries(apiErrors).map(([field, msgs]) => {
           const formField = Object.keys(FIELD_MAP).find((k) => FIELD_MAP[k] === field) || field;
           setError(formField, { message: msgs[0] });
+          return formField;
         });
-        setStep(1);
+        // Jump to the earliest step that actually contains an errored field,
+        // instead of always step 1 -- otherwise errors on step 2 fields are
+        // invisible because that step isn't rendered.
+        const earliestStep = formFields.reduce((earliest, field) => {
+          const stepIndex = STEP_FIELDS.findIndex((fields) => fields.includes(field));
+          return stepIndex === -1 ? earliest : Math.min(earliest, stepIndex + 1);
+        }, STEP_FIELDS.length);
+        setStep(earliestStep);
       } else {
         toast.error('Pendaftaran gagal dikirim. Coba lagi dalam beberapa saat.');
       }
@@ -142,6 +156,25 @@ export default function InvestorRegisterForm() {
               <Input label="Nomor KTP" required placeholder="16 digit sesuai KTP" error={errors.noKtp?.message} {...register('noKtp')} />
               <TextArea label="Alamat lengkap" required placeholder="Sesuai KTP" rows={2} error={errors.alamat?.message} {...register('alamat')} />
 
+              <div className="text-[13px] font-bold text-neutral-900 mt-2 mb-3">Rekening untuk pencairan bagi hasil</div>
+              <div className="grid sm:grid-cols-2 gap-3.5">
+                <Select label="Bank" required error={errors.bank?.message} {...register('bank')} defaultValue="">
+                  <option value="">Pilih bank</option>
+                  {BANK_OPTIONS.map((b) => (
+                    <option key={b} value={b}>
+                      {b}
+                    </option>
+                  ))}
+                </Select>
+                <Input
+                  label="Nomor rekening"
+                  required
+                  placeholder="Sesuai buku tabungan"
+                  error={errors.noRekening?.message}
+                  {...register('noRekening')}
+                />
+              </div>
+
               <div className="flex justify-end mt-6">
                 <Button type="button" onClick={goNext}>
                   Lanjut ke Dokumen KYC <IconArrowRight size={16} />
@@ -155,19 +188,19 @@ export default function InvestorRegisterForm() {
               <div className="text-lg font-extrabold mb-1">Dokumen KYC</div>
               <div className="text-[13px] text-neutral-500 mb-6">Upload dokumen untuk verifikasi identitas. Tim kami memproses dalam 1×24 jam.</div>
 
-              <FileUpload
+              <CameraCapture
                 label="Foto KTP"
                 required
-                icon={IconIdBadge2}
-                hint="JPG atau PNG, maks 5MB, pastikan seluruh sisi KTP terlihat jelas"
+                facingMode="environment"
+                hint="Gunakan kamera belakang, pastikan seluruh sisi KTP terlihat jelas"
                 error={errors.ktpFile?.message}
                 onChange={(f) => setValue('ktpFile', f, { shouldValidate: true })}
               />
-              <FileUpload
+              <CameraCapture
                 label="Selfie sambil memegang KTP"
                 required
-                icon={IconCameraSelfie}
-                hint="Pastikan wajah dan KTP terlihat jelas dalam satu foto"
+                facingMode="user"
+                hint="Gunakan kamera depan, pastikan wajah dan KTP terlihat jelas dalam satu foto"
                 error={errors.selfieFile?.message}
                 onChange={(f) => setValue('selfieFile', f, { shouldValidate: true })}
               />
@@ -197,6 +230,7 @@ export default function InvestorRegisterForm() {
                   ['Email', values.email],
                   ['Nomor HP', values.noHp],
                   ['Kota domisili', values.kotaDomisili],
+                  ['Rekening', values.bank ? `${values.bank} — ${values.noRekening || ''}` : '—'],
                 ].map(([label, val]) => (
                   <div key={label} className="flex justify-between text-[13px] py-1.5 border-b border-neutral-100 last:border-none">
                     <span className="text-neutral-500">{label}</span>

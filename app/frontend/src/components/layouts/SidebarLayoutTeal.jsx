@@ -37,7 +37,7 @@ export default function SidebarLayoutTeal({ navItems, user, badgeLabel }) {
               <>
                 <item.icon size={16} className="shrink-0" aria-hidden="true" />
                 <span className="flex-1">{item.label}</span>
-                {item.badge != null && (
+                {item.badge != null && item.badge > 0 && (
                   <span
                     className={`text-[9.5px] font-bold px-[6px] py-px rounded-full ${
                       isActive ? 'bg-teal-800 text-white' : 'bg-danger text-white'

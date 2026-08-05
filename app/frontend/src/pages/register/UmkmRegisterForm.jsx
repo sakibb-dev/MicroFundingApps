@@ -7,7 +7,6 @@ import {
   IconArrowRight,
   IconSend,
   IconFileCertificate,
-  IconIdBadge2,
   IconChartBar,
   IconPhoto,
   IconFileText,
@@ -16,10 +15,11 @@ import {
   IconFiles,
   IconCircleCheck,
 } from '@tabler/icons-react';
-import { Card, Input, TextArea, Select, FileUpload, Button } from '../../components/ui';
+import { Card, Input, TextArea, Select, FileUpload, CameraCapture, Button } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import api from '../../api/client';
-import { parseCurrencyInput } from '../../utils/format';
+import { formatNumberInput, parseCurrencyInput } from '../../utils/format';
+import { BANK_OPTIONS } from '../../utils/banks';
 import Stepper from './Stepper';
 import SuccessScreen from './SuccessScreen';
 
@@ -40,6 +40,8 @@ const schema = z.object({
   tenor: z.string().min(1, 'Tenor wajib diisi'),
   persenBagiHasil: z.string().min(1, 'Persentase bagi hasil wajib diisi'),
   omzetBulanan: z.string().optional(),
+  bank: z.string().min(1, 'Bank wajib dipilih'),
+  noRekening: z.string().min(1, 'Nomor rekening wajib diisi'),
   nibFile: z.any().refine((f) => !!f, 'NIB wajib diupload'),
   ktpFile: z.any().refine((f) => !!f, 'KTP pemilik wajib diupload'),
   laporanFile: z.any().refine((f) => !!f, 'Laporan keuangan wajib diupload'),
@@ -50,7 +52,7 @@ const schema = z.object({
 
 const STEP_FIELDS = [
   ['namaUsaha', 'kategori', 'kotaUsaha', 'tahunBerdiri', 'deskripsi', 'email', 'password'],
-  ['targetDana', 'tenor', 'persenBagiHasil'],
+  ['targetDana', 'tenor', 'persenBagiHasil', 'bank', 'noRekening'],
   ['nibFile', 'ktpFile', 'laporanFile', 'fotoUsahaFile', 'suratFile'],
   ['agree'],
 ];
@@ -90,6 +92,7 @@ export default function UmkmRegisterForm() {
     tenor: 'tenor_bulan',
     persenBagiHasil: 'persen_bagi_hasil',
     omzetBulanan: 'omzet_bulanan',
+    noRekening: 'no_rekening',
     ktpFile: 'ktp_pemilik',
     nibFile: 'nib',
     laporanFile: 'laporan_keuangan',
@@ -113,6 +116,8 @@ export default function UmkmRegisterForm() {
       formData.append('tenor_bulan', data.tenor);
       formData.append('persen_bagi_hasil', data.persenBagiHasil);
       if (data.omzetBulanan) formData.append('omzet_bulanan', parseCurrencyInput(data.omzetBulanan));
+      formData.append('bank', data.bank);
+      formData.append('no_rekening', data.noRekening);
       formData.append('nib', data.nibFile);
       formData.append('ktp_pemilik', data.ktpFile);
       formData.append('laporan_keuangan', data.laporanFile);
@@ -127,12 +132,20 @@ export default function UmkmRegisterForm() {
     } catch (err) {
       if (err?.response?.status === 422) {
         const apiErrors = err.response.data?.errors || {};
-        Object.entries(apiErrors).forEach(([field, msgs]) => {
+        const formFields = Object.entries(apiErrors).map(([field, msgs]) => {
           const baseField = field.replace(/\.\d+$|\[\]$/, '');
           const formField = Object.keys(FIELD_MAP).find((k) => FIELD_MAP[k] === baseField) || field;
           setError(formField, { message: msgs[0] });
+          return formField;
         });
-        setStep(1);
+        // Jump to the earliest step that actually contains an errored field,
+        // instead of always step 1 -- otherwise errors on step 2/3 fields
+        // are invisible because that step isn't rendered.
+        const earliestStep = formFields.reduce((earliest, field) => {
+          const stepIndex = STEP_FIELDS.findIndex((fields) => fields.includes(field));
+          return stepIndex === -1 ? earliest : Math.min(earliest, stepIndex + 1);
+        }, STEP_FIELDS.length);
+        setStep(earliestStep);
       } else {
         toast.error('Pendaftaran gagal dikirim. Coba lagi dalam beberapa saat.');
       }
@@ -211,8 +224,12 @@ export default function UmkmRegisterForm() {
                   required
                   placeholder="Contoh: 30.000.000"
                   hint="Nominal dalam Rupiah"
+                  inputMode="numeric"
                   error={errors.targetDana?.message}
-                  {...register('targetDana')}
+                  value={values.targetDana ? formatNumberInput(values.targetDana) : ''}
+                  onChange={(e) =>
+                    setValue('targetDana', String(parseCurrencyInput(e.target.value) || ''), { shouldValidate: true })
+                  }
                 />
                 <Input label="Tenor (bulan)" required type="number" placeholder="Contoh: 12" error={errors.tenor?.message} {...register('tenor')} />
               </div>
@@ -224,7 +241,32 @@ export default function UmkmRegisterForm() {
                 error={errors.persenBagiHasil?.message}
                 {...register('persenBagiHasil')}
               />
-              <Input label="Estimasi omzet bulanan" placeholder="Contoh: 85.000.000" {...register('omzetBulanan')} />
+              <Input
+                label="Estimasi omzet bulanan"
+                placeholder="Contoh: 85.000.000"
+                inputMode="numeric"
+                value={values.omzetBulanan ? formatNumberInput(values.omzetBulanan) : ''}
+                onChange={(e) => setValue('omzetBulanan', String(parseCurrencyInput(e.target.value) || ''))}
+              />
+
+              <div className="text-[13px] font-bold text-neutral-900 mt-2 mb-3">Rekening penerima pencairan modal</div>
+              <div className="grid sm:grid-cols-2 gap-3.5">
+                <Select label="Bank" required error={errors.bank?.message} {...register('bank')} defaultValue="">
+                  <option value="">Pilih bank</option>
+                  {BANK_OPTIONS.map((b) => (
+                    <option key={b} value={b}>
+                      {b}
+                    </option>
+                  ))}
+                </Select>
+                <Input
+                  label="Nomor rekening"
+                  required
+                  placeholder="Sesuai buku tabungan usaha"
+                  error={errors.noRekening?.message}
+                  {...register('noRekening')}
+                />
+              </div>
 
               <div className="flex justify-between mt-6">
                 <Button type="button" variant="ghost" onClick={goBack}>
@@ -251,11 +293,11 @@ export default function UmkmRegisterForm() {
                   error={errors.nibFile?.message}
                   onChange={(f) => setValue('nibFile', f, { shouldValidate: true })}
                 />
-                <FileUpload
+                <CameraCapture
                   label="KTP Pemilik Usaha"
                   required
-                  icon={IconIdBadge2}
-                  hint="JPG atau PNG, maks 5MB"
+                  facingMode="environment"
+                  hint="Gunakan kamera belakang, pastikan seluruh sisi KTP terlihat jelas"
                   error={errors.ktpFile?.message}
                   onChange={(f) => setValue('ktpFile', f, { shouldValidate: true })}
                 />
@@ -322,11 +364,15 @@ export default function UmkmRegisterForm() {
                 </div>
                 <div className="flex justify-between text-[13px] py-1.5 border-b border-neutral-100">
                   <span className="text-neutral-500">Target dana</span>
-                  <span className="font-semibold">{values.targetDana ? `Rp ${values.targetDana}` : '—'}</span>
+                  <span className="font-semibold">{values.targetDana ? `Rp ${formatNumberInput(values.targetDana)}` : '—'}</span>
                 </div>
-                <div className="flex justify-between text-[13px] py-1.5">
+                <div className="flex justify-between text-[13px] py-1.5 border-b border-neutral-100">
                   <span className="text-neutral-500">Bagi hasil investor</span>
                   <span className="font-semibold">{values.persenBagiHasil ? `${values.persenBagiHasil}%` : '—'}</span>
+                </div>
+                <div className="flex justify-between text-[13px] py-1.5">
+                  <span className="text-neutral-500">Rekening</span>
+                  <span className="font-semibold">{values.bank ? `${values.bank} — ${values.noRekening || ''}` : '—'}</span>
                 </div>
               </div>
               <div className="bg-neutral-50 rounded p-4 mb-3.5">

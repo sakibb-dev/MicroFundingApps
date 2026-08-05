@@ -18,6 +18,7 @@ class Umkm extends Model
         'user_id', 'nama_usaha', 'kategori', 'kota', 'tahun_berdiri', 'jumlah_karyawan',
         'deskripsi', 'nib', 'target_dana', 'total_terkumpul', 'tenor_bulan',
         'persen_bagi_hasil', 'omzet_bulanan', 'status', 'catatan_admin',
+        'bank', 'no_rekening',
     ];
 
     protected function casts(): array

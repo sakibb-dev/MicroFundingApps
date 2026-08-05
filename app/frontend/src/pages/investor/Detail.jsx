@@ -6,9 +6,10 @@ import {
   IconPhoto,
   IconAlertCircle,
 } from '@tabler/icons-react';
-import { Badge, Card, ProgressBar, Tabs, Chip, Table, Th, Td, Button, ConfirmDialog, EmptyState } from '../../components/ui';
-import { formatCurrency, formatNumberInput, parseCurrencyInput, formatDate, maskName } from '../../utils/format';
-import { getUmkmDetail, getCategoryIcon, getCategoryStyle, INVESTMENT_AMOUNT_PRESETS } from '../../mocks/investor';
+import { Badge, Card, ProgressBar, Tabs, Chip, Table, Th, Td, Button, ConfirmDialog, EmptyState, Skeleton } from '../../components/ui';
+import { formatCurrency, formatNumberInput, parseCurrencyInput, formatDate } from '../../utils/format';
+import { getCategoryIcon, getCategoryStyle, INVESTMENT_AMOUNT_PRESETS } from '../../mocks/investor';
+import { useUmkmDetail } from '../../api/investor';
 
 function InfoItem({ label, value }) {
   return (
@@ -28,10 +29,49 @@ function DetailRow({ label, value }) {
   );
 }
 
+// No campaign-level minimum is stored server-side -- this mirrors the
+// validation floor in StoreInvestmentRequest (nominal min:500000).
+const MIN_INVESTMENT = 500000;
+
+function buildDocumentList(dokumen) {
+  if (!dokumen) return [];
+  const list = [];
+  if (dokumen.nib) list.push({ name: 'NIB Usaha', icon: 'file' });
+  if (dokumen.laporan_keuangan) list.push({ name: 'Laporan Keuangan', icon: 'file' });
+  if (Array.isArray(dokumen.foto_usaha) && dokumen.foto_usaha.length > 0) {
+    list.push({ name: `Foto Usaha (${dokumen.foto_usaha.length} file)`, icon: 'photo' });
+  }
+  if (dokumen.surat_perjanjian) list.push({ name: 'Surat Perjanjian', icon: 'file' });
+  return list;
+}
+
 export default function Detail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const item = useMemo(() => getUmkmDetail(id), [id]);
+  const { data: raw, isLoading, isError } = useUmkmDetail(id);
+
+  const item = useMemo(() => {
+    if (!raw) return null;
+    return {
+      id: raw.id,
+      name: raw.nama_usaha,
+      category: raw.kategori,
+      city: raw.kota,
+      returnPct: raw.persen_bagi_hasil,
+      percent: raw.persen_terkumpul,
+      collected: raw.total_terkumpul,
+      target: raw.target_dana,
+      tenorBulan: raw.tenor_bulan,
+      minInvestment: MIN_INVESTMENT,
+      description: raw.deskripsi,
+      tahunBerdiri: raw.tahun_berdiri,
+      jumlahKaryawan: raw.jumlah_karyawan,
+      omzetBulanan: raw.omzet_bulanan,
+      nibVerified: Boolean(raw.dokumen?.nib),
+      documents: buildDocumentList(raw.dokumen),
+      investors: raw.daftar_investor || [],
+    };
+  }, [raw]);
 
   const [amount, setAmount] = useState(INVESTMENT_AMOUNT_PRESETS[1]);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -46,7 +86,16 @@ export default function Detail() {
     return estMonthly * item.tenorBulan;
   }, [estMonthly, item]);
 
-  if (!item) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
+        <Skeleton className="h-[220px] w-full rounded-lg" />
+        <Skeleton className="h-[420px] w-full rounded-lg" />
+      </div>
+    );
+  }
+
+  if (isError || !item) {
     return (
       <Card>
         <EmptyState
@@ -84,9 +133,9 @@ export default function Detail() {
         <div>
           <p className="text-[13.5px] text-neutral-700 leading-loose">{item.description}</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 my-4">
-            <InfoItem label="Tahun berdiri" value={item.tahunBerdiri} />
-            <InfoItem label="Jumlah karyawan" value={`${item.jumlahKaryawan} orang`} />
-            <InfoItem label="Omzet bulanan" value={formatCurrency(item.omzetBulanan)} />
+            <InfoItem label="Tahun berdiri" value={item.tahunBerdiri || '—'} />
+            <InfoItem label="Jumlah karyawan" value={item.jumlahKaryawan ? `${item.jumlahKaryawan} orang` : '—'} />
+            <InfoItem label="Omzet bulanan" value={item.omzetBulanan ? formatCurrency(item.omzetBulanan) : '—'} />
           </div>
           {item.nibVerified && (
             <div className="flex items-center gap-1.5 text-[12.5px] font-semibold text-green-600">
@@ -99,20 +148,23 @@ export default function Detail() {
     {
       key: 'dokumen',
       label: 'Dokumen',
-      content: (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          {item.documents.map((doc) => (
-            <div key={doc.name} className="flex items-center gap-2 bg-neutral-50 rounded px-3.5 py-3 text-[13px] text-neutral-700">
-              {doc.icon === 'photo' ? (
-                <IconPhoto size={16} className="text-neutral-500 shrink-0" aria-hidden="true" />
-              ) : (
-                <IconFileText size={16} className="text-neutral-500 shrink-0" aria-hidden="true" />
-              )}
-              {doc.name}
-            </div>
-          ))}
-        </div>
-      ),
+      content:
+        item.documents.length === 0 ? (
+          <EmptyState title="Belum ada dokumen" body="UMKM ini belum mengunggah dokumen publik." />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {item.documents.map((doc) => (
+              <div key={doc.name} className="flex items-center gap-2 bg-neutral-50 rounded px-3.5 py-3 text-[13px] text-neutral-700">
+                {doc.icon === 'photo' ? (
+                  <IconPhoto size={16} className="text-neutral-500 shrink-0" aria-hidden="true" />
+                ) : (
+                  <IconFileText size={16} className="text-neutral-500 shrink-0" aria-hidden="true" />
+                )}
+                {doc.name}
+              </div>
+            ))}
+          </div>
+        ),
     },
     {
       key: 'investor',
@@ -133,10 +185,10 @@ export default function Detail() {
             <tbody>
               {item.investors.map((inv, i) => (
                 <tr key={i}>
-                  <Td>{maskName(inv.name)}</Td>
+                  <Td>{inv.nama}</Td>
                   <Td>{formatCurrency(inv.nominal)}</Td>
-                  <Td>{formatDate(inv.tanggal)}</Td>
-                  <Td>{inv.percent}%</Td>
+                  <Td>{inv.tanggal ? formatDate(inv.tanggal) : '—'}</Td>
+                  <Td>{inv.persen_kepemilikan}%</Td>
                 </tr>
               ))}
             </tbody>
@@ -229,7 +281,6 @@ export default function Detail() {
           <Button variant="primary" tone="green" full disabled={belowMin} onClick={handleInvestClick}>
             Investasi Sekarang
           </Button>
-          <div className="text-[11px] text-neutral-500 text-center mt-2.5">Jatuh tempo bagi hasil: {item.jatuhTempo}</div>
         </Card>
       </div>
 

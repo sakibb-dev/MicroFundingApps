@@ -6,6 +6,7 @@ use App\Enums\ProfitReportStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Umkm\StoreProfitReportRequest;
 use App\Http\Responses\ApiResponse;
+use App\Models\PlatformSetting;
 use App\Models\ProfitDistribution;
 use App\Models\ProfitReport;
 use App\Services\DocumentStorageService;
@@ -43,7 +44,7 @@ class ProfitReportController extends Controller
         }
 
         $investments = $umkm->investments()->whereIn('status', ['confirmed', 'active'])->get(['id', 'nominal']);
-        $feePlatformPercent = (float) config('microinvest.fee_platform_percent', 5.0);
+        $feePlatformPercent = (float) PlatformSetting::get('platform_fee_percent', config('microinvest.fee_platform_percent', 5.0));
 
         $result = $this->calculator->calculate(
             keuntunganKotor: $data['keuntungan_kotor'],

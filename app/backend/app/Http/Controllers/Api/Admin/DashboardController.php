@@ -22,6 +22,8 @@ class DashboardController extends Controller
             'dana_beredar' => Umkm::approved()->sum('total_terkumpul'),
             'pending_kyc' => Investor::kycPending()->count(),
             'pending_transfer' => Investment::pendingConfirmation()->count(),
+            'pending_umkm' => Umkm::pending()->count(),
+            'pending_profit_reports' => ProfitReport::submitted()->count(),
             'fee_platform_bulan_ini' => \App\Models\PlatformFee::whereMonth('periode', now()->month)
                 ->whereYear('periode', now()->year)
                 ->sum('nominal_fee'),

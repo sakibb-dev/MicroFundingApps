@@ -19,6 +19,7 @@ class Investment extends Model
     protected $fillable = [
         'investor_id', 'umkm_id', 'nominal', 'persen_kepemilikan', 'status',
         'bukti_transfer_path', 'catatan_admin', 'confirmed_by', 'confirmed_at',
+        'forwarded_at', 'admin_notes',
     ];
 
     protected function casts(): array
@@ -28,6 +29,7 @@ class Investment extends Model
             'persen_kepemilikan' => 'decimal:3',
             'status' => InvestmentStatus::class,
             'confirmed_at' => 'datetime',
+            'forwarded_at' => 'datetime',
         ];
     }
 

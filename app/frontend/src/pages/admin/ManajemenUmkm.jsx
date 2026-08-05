@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { IconBuildingStore, IconFileText, IconChartBar, IconIdBadge2, IconPhoto } from '@tabler/icons-react';
-import { Card, Chip, TextArea, Button, Badge, Table, Th, Td, ConfirmDialog, EmptyState } from '../../components/ui';
+import { Card, Chip, TextArea, Button, Badge, Table, Th, Td, ConfirmDialog, EmptyState, SkeletonTable } from '../../components/ui';
 import { formatCurrency } from '../../utils/format';
-import { getUmkmList, getUmkmDetail } from '../../mocks/admin';
+import { useAdminUmkmList, useApproveUmkm, useRejectUmkm } from '../../api/admin';
 import { useToast } from '../../context/ToastContext';
 
 const STATUS_BADGE = {
@@ -18,36 +18,33 @@ const FILTERS = [
   { key: 'rejected', label: 'Ditolak' },
 ];
 
-function DocViewer({ icon: Icon, label }) {
+function DocViewer({ icon: Icon, label, available }) {
   return (
     <div className="bg-neutral-100 rounded-lg h-32 flex flex-col items-center justify-center gap-1.5 text-[12px] text-neutral-500 text-center px-2">
       <Icon size={24} aria-hidden="true" />
       {label}
+      {available === false && <span className="text-[10.5px] text-neutral-400">Belum diunggah</span>}
     </div>
   );
 }
 
 export default function ManajemenUmkm() {
   const toast = useToast();
-  const [items, setItems] = useState(() => getUmkmList());
   const [filter, setFilter] = useState('all');
+  const { data, isLoading } = useAdminUmkmList(filter);
+  const approveUmkm = useApproveUmkm();
+  const rejectUmkm = useRejectUmkm();
+
+  const items = data || [];
   const [selectedId, setSelectedId] = useState(null);
   const [note, setNote] = useState('');
   const [rejecting, setRejecting] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [approveConfirmOpen, setApproveConfirmOpen] = useState(false);
   const [rejectConfirmOpen, setRejectConfirmOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   const pendingCount = items.filter((i) => i.status === 'pending').length;
-
-  const filtered = useMemo(
-    () => items.filter((item) => filter === 'all' || item.status === filter),
-    [items, filter]
-  );
-
   const selected = items.find((i) => i.id === selectedId) || null;
-  const detail = selectedId ? getUmkmDetail(selectedId) : null;
 
   function openReview(id) {
     setSelectedId(id);
@@ -57,13 +54,13 @@ export default function ManajemenUmkm() {
   }
 
   function handleApproveConfirm() {
-    setSubmitting(true);
-    setTimeout(() => {
-      setItems((prev) => prev.map((i) => (i.id === selected.id ? { ...i, status: 'approved' } : i)));
-      setSubmitting(false);
-      setApproveConfirmOpen(false);
-      toast.success(`${selected.namaUsaha} disetujui dan email pemberitahuan terkirim.`);
-    }, 700);
+    approveUmkm.mutate(selected.id, {
+      onSuccess: () => {
+        setApproveConfirmOpen(false);
+        toast.success(`${selected.nama_usaha} disetujui dan email pemberitahuan terkirim.`);
+      },
+      onError: () => toast.error('Gagal menyetujui UMKM. Coba lagi.'),
+    });
   }
 
   function handleKirimPenolakan() {
@@ -75,15 +72,20 @@ export default function ManajemenUmkm() {
   }
 
   function handleRejectConfirm() {
-    setSubmitting(true);
-    setTimeout(() => {
-      setItems((prev) => prev.map((i) => (i.id === selected.id ? { ...i, status: 'rejected' } : i)));
-      setSubmitting(false);
-      setRejectConfirmOpen(false);
-      setRejecting(false);
-      toast.success('Pendaftaran ditolak, email pemberitahuan telah dikirim.');
-    }, 700);
+    rejectUmkm.mutate(
+      { umkmId: selected.id, alasan: rejectReason },
+      {
+        onSuccess: () => {
+          setRejectConfirmOpen(false);
+          setRejecting(false);
+          toast.success('Pendaftaran ditolak, email pemberitahuan telah dikirim.');
+        },
+        onError: () => toast.error('Gagal menolak UMKM. Coba lagi.'),
+      }
+    );
   }
+
+  const submitting = approveUmkm.isPending || rejectUmkm.isPending;
 
   return (
     <div>
@@ -103,7 +105,9 @@ export default function ManajemenUmkm() {
 
       <Card padded={false}>
         <div className="p-3">
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <SkeletonTable rows={5} cols={5} />
+          ) : items.length === 0 ? (
             <EmptyState
               icon={IconBuildingStore}
               title={filter === 'pending' ? 'Semua pendaftaran sudah direview' : 'Tidak ada data yang cocok'}
@@ -125,13 +129,13 @@ export default function ManajemenUmkm() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((item) => {
+                {items.map((item) => {
                   const badge = STATUS_BADGE[item.status];
                   return (
                     <tr key={item.id}>
-                      <Td className="font-medium text-neutral-900">{item.namaUsaha}</Td>
+                      <Td className="font-medium text-neutral-900">{item.nama_usaha}</Td>
                       <Td className="text-neutral-500">{item.kategori}</Td>
-                      <Td className="whitespace-nowrap">{formatCurrency(item.targetDana)}</Td>
+                      <Td className="whitespace-nowrap">{formatCurrency(item.target_dana)}</Td>
                       <Td>
                         <Badge variant={badge.variant} tone="teal">
                           {badge.label}
@@ -151,34 +155,38 @@ export default function ManajemenUmkm() {
         </div>
       </Card>
 
-      {selected && detail && (
+      {selected && (
         <Card className="mt-4">
-          <div className="text-[15px] font-bold text-neutral-900 mb-3.5">Review — {selected.namaUsaha}</div>
+          <div className="text-[15px] font-bold text-neutral-900 mb-3.5">Review — {selected.nama_usaha}</div>
 
           <div className="grid sm:grid-cols-2 gap-2.5 mb-4">
             <div className="text-[12.5px]">
               <span className="block text-[11px] text-neutral-500">Kategori</span>
-              {detail.kategori}
+              {selected.kategori}
             </div>
             <div className="text-[12.5px]">
               <span className="block text-[11px] text-neutral-500">Target dana</span>
-              {formatCurrency(detail.targetDana)}
+              {formatCurrency(selected.target_dana)}
             </div>
             <div className="text-[12.5px]">
               <span className="block text-[11px] text-neutral-500">% bagi hasil</span>
-              {detail.persenBagiHasil}%
+              {selected.persen_bagi_hasil}%
             </div>
             <div className="text-[12.5px]">
               <span className="block text-[11px] text-neutral-500">Kota</span>
-              {detail.kota}
+              {selected.kota}
             </div>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4 mb-4">
-            <DocViewer icon={IconFileText} label="NIB Usaha" />
-            <DocViewer icon={IconChartBar} label="Laporan Keuangan 3 Bln" />
+            <DocViewer icon={IconFileText} label="NIB Usaha" available={Boolean(selected.dokumen?.nib)} />
+            <DocViewer icon={IconChartBar} label="Laporan Keuangan" available={Boolean(selected.dokumen?.laporan_keuangan)} />
             <DocViewer icon={IconIdBadge2} label="KTP Pemilik" />
-            <DocViewer icon={IconPhoto} label="Foto Usaha" />
+            <DocViewer
+              icon={IconPhoto}
+              label="Foto Usaha"
+              available={Array.isArray(selected.dokumen?.foto_usaha) && selected.dokumen.foto_usaha.length > 0}
+            />
           </div>
 
           <TextArea
@@ -233,7 +241,7 @@ export default function ManajemenUmkm() {
         onClose={() => !submitting && setApproveConfirmOpen(false)}
         onConfirm={handleApproveConfirm}
         title="Approve pendaftaran UMKM?"
-        description={`${selected?.namaUsaha || ''} akan tampil sebagai campaign aktif di platform dan email pemberitahuan dikirim ke pemilik usaha.`}
+        description={`${selected?.nama_usaha || ''} akan tampil sebagai campaign aktif di platform dan email pemberitahuan dikirim ke pemilik usaha.`}
         confirmLabel="Approve"
         tone="teal"
         loading={submitting}
@@ -244,7 +252,7 @@ export default function ManajemenUmkm() {
         onClose={() => !submitting && setRejectConfirmOpen(false)}
         onConfirm={handleRejectConfirm}
         title="Tolak pendaftaran ini?"
-        description={`Pendaftaran ${selected?.namaUsaha || ''} akan ditolak dan email pemberitahuan berisi alasan penolakan akan dikirim.`}
+        description={`Pendaftaran ${selected?.nama_usaha || ''} akan ditolak dan email pemberitahuan berisi alasan penolakan akan dikirim.`}
         confirmLabel="Tolak"
         tone="teal"
         danger

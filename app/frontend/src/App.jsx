@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from './context/ToastContext';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import ApiErrorBridge from './api/ApiErrorBridge';
 import ProtectedRoute from './components/ProtectedRoute';
+import { useAdminDashboard } from './api/admin';
 
 import PublicLayout from './components/layouts/PublicLayout';
 import SidebarLayoutGreen from './components/layouts/SidebarLayoutGreen';
@@ -27,23 +28,55 @@ import UmkmPengajuanBagiHasil from './pages/umkm/PengajuanBagiHasil';
 import UmkmRiwayat from './pages/umkm/Riwayat';
 import UmkmProfilUsaha from './pages/umkm/ProfilUsaha';
 
+import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminKyc from './pages/admin/Kyc';
 import AdminManajemenUmkm from './pages/admin/ManajemenUmkm';
 import AdminTransaksi from './pages/admin/Transaksi';
 import AdminBagiHasil from './pages/admin/BagiHasil';
 import AdminLaporan from './pages/admin/Laporan';
+import AdminSettings from './pages/admin/Settings';
 
 const queryClient = new QueryClient();
 
+const KYC_STATUS_LABEL = {
+  approved: 'Terverifikasi',
+  pending: 'Menunggu Verifikasi',
+  rejected: 'KYC Ditolak',
+};
+
+const UMKM_STATUS_LABEL = {
+  approved: '● Campaign Aktif',
+  pending: '● Menunggu Review',
+  rejected: '● Ditolak',
+};
+
 function InvestorLayout() {
-  return <SidebarLayoutGreen navItems={investorNav} user={{ name: 'Rendra Kusuma', status: 'Terverifikasi' }} />;
+  const { user } = useAuth();
+  return (
+    <SidebarLayoutGreen
+      navItems={investorNav}
+      user={{ name: user?.name, status: KYC_STATUS_LABEL[user?.kyc_status] || 'Menunggu Verifikasi' }}
+    />
+  );
 }
 function UmkmLayout() {
-  return <SidebarLayoutTeal navItems={umkmNav} badgeLabel="UMKM" user={{ name: 'Warung Bu Sari', status: '● Campaign Aktif' }} />;
+  const { user } = useAuth();
+  return (
+    <SidebarLayoutTeal
+      navItems={umkmNav}
+      badgeLabel="UMKM"
+      user={{ name: user?.name, status: UMKM_STATUS_LABEL[user?.umkm_status] || '● Menunggu Review' }}
+    />
+  );
 }
 function AdminLayout() {
-  return <SidebarLayoutTeal navItems={adminNav} badgeLabel="ADMIN" user={{ name: 'Admin Utama', status: 'Super Admin' }} />;
+  const { user } = useAuth();
+  const { data: metrics } = useAdminDashboard();
+  const navItems = adminNav.map((item) =>
+    item.badgeKey ? { ...item, badge: metrics?.[item.badgeKey] ?? 0 } : item
+  );
+  return <SidebarLayoutTeal navItems={navItems} badgeLabel="ADMIN" user={{ name: user?.name, status: 'Super Admin' }} />;
 }
 
 export default function App() {
@@ -91,10 +124,14 @@ export default function App() {
                 <Route path="profil-usaha" element={<UmkmProfilUsaha />} />
               </Route>
 
+              {/* Not linked anywhere in the public UI -- reachable only by
+                  someone who already knows this exact URL. See AdminLogin. */}
+              <Route path="/admin-panel/login" element={<AdminLogin />} />
+
               <Route
-                path="/admin"
+                path="/admin-panel"
                 element={
-                  <ProtectedRoute role="admin">
+                  <ProtectedRoute role="admin" loginPath="/admin-panel/login">
                     <AdminLayout />
                   </ProtectedRoute>
                 }
@@ -105,6 +142,7 @@ export default function App() {
                 <Route path="transaksi" element={<AdminTransaksi />} />
                 <Route path="bagi-hasil" element={<AdminBagiHasil />} />
                 <Route path="laporan" element={<AdminLaporan />} />
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
             </Routes>
           </AuthProvider>

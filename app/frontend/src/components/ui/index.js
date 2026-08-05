@@ -7,6 +7,7 @@ export { default as Input } from './Input';
 export { default as TextArea } from './TextArea';
 export { default as Select } from './Select';
 export { default as FileUpload } from './FileUpload';
+export { default as CameraCapture } from './CameraCapture';
 export { Table, Th, Td } from './Table';
 export { default as Modal } from './Modal';
 export { default as ConfirmDialog } from './ConfirmDialog';

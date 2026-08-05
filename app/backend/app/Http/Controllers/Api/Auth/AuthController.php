@@ -48,6 +48,8 @@ class AuthController extends Controller
                 'no_hp' => $data['no_hp'],
                 'kota_domisili' => $data['kota_domisili'],
                 'alamat' => $data['alamat'],
+                'bank' => $data['bank'],
+                'no_rekening' => $data['no_rekening'],
                 'kyc_status' => KycStatus::Pending,
             ]);
 
@@ -100,6 +102,8 @@ class AuthController extends Controller
                 'tenor_bulan' => $data['tenor_bulan'],
                 'persen_bagi_hasil' => $data['persen_bagi_hasil'],
                 'omzet_bulanan' => $data['omzet_bulanan'] ?? null,
+                'bank' => $data['bank'],
+                'no_rekening' => $data['no_rekening'],
                 'status' => UmkmStatus::Pending,
             ]);
 

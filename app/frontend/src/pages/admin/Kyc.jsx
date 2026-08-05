@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { IconIdBadge2, IconCameraSelfie } from '@tabler/icons-react';
-import { Card, Chip, Input, TextArea, Button, Badge, Table, Th, Td, ConfirmDialog, EmptyState } from '../../components/ui';
+import { Card, Chip, Input, TextArea, Button, Badge, Table, Th, Td, ConfirmDialog, EmptyState, SkeletonTable } from '../../components/ui';
 import { formatDate } from '../../utils/format';
-import { getKycList, getKycDetail } from '../../mocks/admin';
+import { useKycList, useApproveKyc, useRejectKyc } from '../../api/admin';
 import { useToast } from '../../context/ToastContext';
 
 const STATUS_BADGE = {
@@ -18,19 +18,24 @@ const FILTERS = [
   { key: 'rejected', label: 'Ditolak' },
 ];
 
-function DocViewer({ icon: Icon, label }) {
+function DocViewer({ icon: Icon, label, available }) {
   return (
     <div className="bg-neutral-100 rounded-lg h-36 flex flex-col items-center justify-center gap-1.5 text-[12px] text-neutral-500">
       <Icon size={24} aria-hidden="true" />
       {label}
+      {!available && <span className="text-[10.5px] text-neutral-400">Belum diunggah</span>}
     </div>
   );
 }
 
 export default function Kyc() {
   const toast = useToast();
-  const [items, setItems] = useState(() => getKycList());
   const [filter, setFilter] = useState('all');
+  const { data, isLoading } = useKycList(filter);
+  const approveKyc = useApproveKyc();
+  const rejectKyc = useRejectKyc();
+
+  const items = data || [];
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const [note, setNote] = useState('');
@@ -38,21 +43,16 @@ export default function Kyc() {
   const [rejectReason, setRejectReason] = useState('');
   const [approveConfirmOpen, setApproveConfirmOpen] = useState(false);
   const [rejectConfirmOpen, setRejectConfirmOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   const pendingCount = items.filter((i) => i.status === 'pending').length;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return items.filter((item) => {
-      if (filter !== 'all' && item.status !== filter) return false;
-      if (q && !item.nama.toLowerCase().includes(q) && !item.email.toLowerCase().includes(q)) return false;
-      return true;
-    });
-  }, [items, filter, search]);
+    if (!q) return items;
+    return items.filter((item) => item.nama.toLowerCase().includes(q) || item.email.toLowerCase().includes(q));
+  }, [items, search]);
 
   const selected = items.find((i) => i.id === selectedId) || null;
-  const detail = selectedId ? getKycDetail(selectedId) : null;
 
   function openReview(id) {
     setSelectedId(id);
@@ -62,13 +62,13 @@ export default function Kyc() {
   }
 
   function handleApproveConfirm() {
-    setSubmitting(true);
-    setTimeout(() => {
-      setItems((prev) => prev.map((i) => (i.id === selected.id ? { ...i, status: 'approved' } : i)));
-      setSubmitting(false);
-      setApproveConfirmOpen(false);
-      toast.success(`KYC ${selected.nama} disetujui.`);
-    }, 700);
+    approveKyc.mutate(selected.id, {
+      onSuccess: () => {
+        setApproveConfirmOpen(false);
+        toast.success(`KYC ${selected.nama} disetujui.`);
+      },
+      onError: () => toast.error('Gagal menyetujui KYC. Coba lagi.'),
+    });
   }
 
   function handleKirimPenolakan() {
@@ -80,15 +80,20 @@ export default function Kyc() {
   }
 
   function handleRejectConfirm() {
-    setSubmitting(true);
-    setTimeout(() => {
-      setItems((prev) => prev.map((i) => (i.id === selected.id ? { ...i, status: 'rejected' } : i)));
-      setSubmitting(false);
-      setRejectConfirmOpen(false);
-      setRejecting(false);
-      toast.success(`KYC ${selected.nama} ditolak dan email pemberitahuan telah dikirim.`);
-    }, 700);
+    rejectKyc.mutate(
+      { investorId: selected.id, alasan: rejectReason },
+      {
+        onSuccess: () => {
+          setRejectConfirmOpen(false);
+          setRejecting(false);
+          toast.success(`KYC ${selected.nama} ditolak dan email pemberitahuan telah dikirim.`);
+        },
+        onError: () => toast.error('Gagal menolak KYC. Coba lagi.'),
+      }
+    );
   }
+
+  const submitting = approveKyc.isPending || rejectKyc.isPending;
 
   return (
     <div>
@@ -117,7 +122,9 @@ export default function Kyc() {
 
       <Card padded={false}>
         <div className="p-3">
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <SkeletonTable rows={5} cols={5} />
+          ) : filtered.length === 0 ? (
             <EmptyState
               icon={IconIdBadge2}
               title={filter === 'pending' ? 'Semua KYC sudah direview' : 'Tidak ada data yang cocok'}
@@ -145,7 +152,7 @@ export default function Kyc() {
                     <tr key={item.id}>
                       <Td className="font-medium text-neutral-900">{item.nama}</Td>
                       <Td className="text-neutral-500">{item.email}</Td>
-                      <Td className="whitespace-nowrap">{formatDate(item.tglDaftar)}</Td>
+                      <Td className="whitespace-nowrap">{formatDate(item.tanggal_daftar)}</Td>
                       <Td>
                         <Badge variant={badge.variant} tone="teal">
                           {badge.label}
@@ -165,7 +172,7 @@ export default function Kyc() {
         </div>
       </Card>
 
-      {selected && detail && (
+      {selected && (
         <Card className="mt-4">
           <div className="text-[15px] font-bold text-neutral-900 mb-3.5">Review — {selected.nama}</div>
 
@@ -180,17 +187,17 @@ export default function Kyc() {
             </div>
             <div className="text-[12.5px]">
               <span className="block text-[11px] text-neutral-500">No. HP</span>
-              {detail.noHp}
+              {selected.no_hp}
             </div>
             <div className="text-[12.5px]">
               <span className="block text-[11px] text-neutral-500">Alamat</span>
-              {detail.alamat}
+              {selected.alamat}
             </div>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4 mb-4">
-            <DocViewer icon={IconIdBadge2} label="KTP" />
-            <DocViewer icon={IconCameraSelfie} label="Selfie + KTP" />
+            <DocViewer icon={IconIdBadge2} label="KTP" available={Boolean(selected.dokumen?.ktp)} />
+            <DocViewer icon={IconCameraSelfie} label="Selfie + KTP" available={Boolean(selected.dokumen?.selfie)} />
           </div>
 
           <TextArea

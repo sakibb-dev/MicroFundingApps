@@ -1,38 +1,65 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { IconPaperclip } from '@tabler/icons-react';
-import { Card, FileUpload, Button } from '../../components/ui';
+import { Card, FileUpload, Button, EmptyState, Skeleton } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency } from '../../utils/format';
-import { getUmkmList, REKENING_TUJUAN } from '../../mocks/investor';
+import { useUmkmList, useCreateInvestment, usePlatformBankInfo } from '../../api/investor';
 
 export default function Transaksi() {
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
+  const createInvestment = useCreateInvestment();
+  const { data: bankInfo, isLoading: bankInfoLoading } = usePlatformBankInfo();
 
   // Falls back to a sensible default so the page still renders something
   // meaningful if reached directly (e.g. via the sidebar) instead of from
   // the Detail page's "Investasi Sekarang" confirm flow.
-  const fallback = getUmkmList()[0];
-  const state = location.state || {
-    umkmId: fallback.id,
-    umkmName: fallback.name,
-    nominal: fallback.minInvestment,
-    estMonthly: Math.round(fallback.minInvestment * (fallback.returnPct / 100)),
-  };
+  const needsFallback = !location.state;
+  const { data: umkmList, isLoading: fallbackLoading } = useUmkmList({}, { enabled: needsFallback });
+  const fallbackItem = needsFallback ? umkmList?.[0] : null;
+  const state =
+    location.state ||
+    (fallbackItem && {
+      umkmId: fallbackItem.id,
+      umkmName: fallbackItem.nama_usaha,
+      nominal: 500000,
+      estMonthly: Math.round(500000 * (fallbackItem.persen_bagi_hasil / 100)),
+    });
 
   const [file, setFile] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
 
   function handleSubmit() {
-    if (!file || submitting) return;
-    setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      toast.success('Bukti transfer terkirim. Kami akan konfirmasi dalam 1x24 jam.');
-      navigate('/investor/portfolio');
-    }, 600);
+    if (!file || createInvestment.isPending) return;
+    const formData = new FormData();
+    formData.append('umkm_id', state.umkmId);
+    formData.append('nominal', state.nominal);
+    formData.append('bukti_transfer', file);
+
+    createInvestment.mutate(formData, {
+      onSuccess: () => {
+        toast.success('Bukti transfer terkirim. Kami akan konfirmasi dalam 1x24 jam.');
+        navigate('/investor/portfolio');
+      },
+      onError: (err) => {
+        if (err?.response?.status !== 422) {
+          toast.error('Gagal mengirim bukti transfer. Coba lagi.');
+        }
+      },
+    });
+  }
+
+  if (needsFallback && fallbackLoading) {
+    return null;
+  }
+
+  if (!state) {
+    return (
+      <Card>
+        <EmptyState title="Belum ada UMKM untuk diinvestasikan" body="Jelajahi UMKM terlebih dahulu dari halaman Home." />
+      </Card>
+    );
   }
 
   return (
@@ -64,17 +91,29 @@ export default function Transaksi() {
           <hr className="border-neutral-100 my-3.5" />
 
           <div className="text-[13px] font-bold text-neutral-900 mb-2.5">Transfer ke rekening</div>
-          <div className="bg-neutral-50 rounded px-3.5 py-3 mb-4">
-            <div className="text-[11px] text-neutral-500">
-              {REKENING_TUJUAN.bank} — a.n. {REKENING_TUJUAN.atasNama}
+          {bankInfoLoading ? (
+            <Skeleton className="h-14 w-full mb-4" />
+          ) : (
+            <div className="bg-neutral-50 rounded px-3.5 py-3 mb-4">
+              <div className="text-[11px] text-neutral-500">
+                {bankInfo?.bank} — a.n. {bankInfo?.atas_nama}
+              </div>
+              <div className="text-[15px] font-bold mt-0.5 text-neutral-900">{bankInfo?.nomor}</div>
             </div>
-            <div className="text-[15px] font-bold mt-0.5 text-neutral-900">{REKENING_TUJUAN.nomor}</div>
-          </div>
+          )}
 
           <FileUpload label="Upload bukti transfer" icon={IconPaperclip} onChange={setFile} required />
 
-          <Button variant="primary" tone="green" full className="mt-2" loading={submitting} disabled={!file} onClick={handleSubmit}>
-            {submitting ? 'Mengirim...' : 'Kirim Konfirmasi'}
+          <Button
+            variant="primary"
+            tone="green"
+            full
+            className="mt-2"
+            loading={createInvestment.isPending}
+            disabled={!file}
+            onClick={handleSubmit}
+          >
+            {createInvestment.isPending ? 'Mengirim...' : 'Kirim Konfirmasi'}
           </Button>
         </Card>
       </div>

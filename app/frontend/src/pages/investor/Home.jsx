@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { IconSearch, IconMapPin } from '@tabler/icons-react';
-import { Card, Badge, ProgressBar, Select, Chip, EmptyState } from '../../components/ui';
+import { IconSearch, IconMapPin, IconAlertTriangle } from '@tabler/icons-react';
+import { Card, Badge, ProgressBar, Select, Chip, EmptyState, SkeletonCard } from '../../components/ui';
 import { formatCurrency } from '../../utils/format';
-import { getUmkmList, getCategoryIcon, getCategoryStyle, getFundingStatus, CATEGORIES } from '../../mocks/investor';
+import { getCategoryIcon, getCategoryStyle, getFundingStatus, CATEGORIES } from '../../mocks/investor';
+import { useUmkmList } from '../../api/investor';
 
 const STATUS_CHIPS = [
   { key: 'semua', label: 'Semua' },
@@ -12,8 +13,32 @@ const STATUS_CHIPS = [
   { key: 'terbaru', label: 'Terbaru' },
 ];
 
+const NEW_CAMPAIGN_THRESHOLD_DAYS = 14;
+
+function isRecentlyListed(createdAt) {
+  if (!createdAt) return false;
+  const days = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24);
+  return days <= NEW_CAMPAIGN_THRESHOLD_DAYS;
+}
+
 export default function Home() {
-  const list = useMemo(() => getUmkmList(), []);
+  const { data, isLoading, isError } = useUmkmList();
+  const list = useMemo(
+    () =>
+      (data || []).map((item) => ({
+        id: item.id,
+        name: item.nama_usaha,
+        category: item.kategori,
+        city: item.kota,
+        returnPct: item.persen_bagi_hasil,
+        percent: item.persen_terkumpul,
+        collected: item.total_terkumpul,
+        target: item.target_dana,
+        investorCount: item.jumlah_investor ?? 0,
+        isNew: isRecentlyListed(item.created_at),
+      })),
+    [data]
+  );
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('semua');
   const [statusFilter, setStatusFilter] = useState('semua');
@@ -38,11 +63,25 @@ export default function Home() {
     });
   }, [list, search, category, statusFilter]);
 
+  if (isError) {
+    return (
+      <Card>
+        <EmptyState
+          icon={IconAlertTriangle}
+          title="Gagal memuat daftar UMKM"
+          body="Terjadi gangguan saat mengambil data. Coba muat ulang halaman."
+        />
+      </Card>
+    );
+  }
+
   return (
     <div>
       <div className="mb-6">
         <div className="text-2xl font-extrabold text-neutral-900 tracking-tight">Temukan UMKM</div>
-        <div className="text-[13.5px] text-neutral-500 mt-0.5">{list.length}+ UMKM terverifikasi siap didanai</div>
+        <div className="text-[13.5px] text-neutral-500 mt-0.5">
+          {isLoading ? 'Memuat...' : `${list.length}+ UMKM terverifikasi siap didanai`}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2.5 mb-4">
@@ -81,7 +120,13 @@ export default function Home() {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {isLoading ? (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-[18px]">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      ) : filtered.length === 0 ? (
         <Card>
           <EmptyState
             icon={IconSearch}
@@ -128,9 +173,7 @@ export default function Home() {
                     labels={[`${item.percent}% terdanai`, `${formatCurrency(item.collected)} / ${formatCurrency(item.target)}`]}
                   />
                   <div className="flex justify-between items-center mt-3 pt-2.5 border-t border-neutral-100">
-                    <span className="text-[11px] text-neutral-500">
-                      {item.daysLeft} hari &middot; {item.investorCount} investor
-                    </span>
+                    <span className="text-[11px] text-neutral-500">{item.investorCount} investor</span>
                   </div>
                 </div>
               </Card>

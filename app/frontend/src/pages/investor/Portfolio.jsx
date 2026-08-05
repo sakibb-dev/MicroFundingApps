@@ -1,24 +1,71 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IconChartPie } from '@tabler/icons-react';
-import { Card, MetricCard, Badge, Table, Th, Td, EmptyState } from '../../components/ui';
-import { formatCurrency } from '../../utils/format';
-import { getPortfolio, getCategoryIcon } from '../../mocks/investor';
+import { Card, MetricCard, Badge, Table, Th, Td, EmptyState, SkeletonList } from '../../components/ui';
+import { formatCurrency, formatPeriode } from '../../utils/format';
+import { getCategoryIcon } from '../../mocks/investor';
+import { usePortfolio } from '../../api/investor';
 
 const STATUS_LABEL = {
-  aktif: { label: 'Aktif', className: 'text-green-600' },
-  menunggu: { label: 'Menunggu', className: 'text-warning' },
+  confirmed: { label: 'Aktif', className: 'text-green-600' },
+  active: { label: 'Aktif', className: 'text-green-600' },
+  pending_confirmation: { label: 'Menunggu', className: 'text-warning' },
 };
 
 const RIWAYAT_BADGE = {
-  cair: { label: 'Cair', variant: 'success' },
-  diproses: { label: 'Diproses', variant: 'warning' },
+  processed: { label: 'Cair', variant: 'success' },
+  pending: { label: 'Diproses', variant: 'warning' },
+  failed: { label: 'Gagal', variant: 'danger' },
 };
 
 export default function Portfolio() {
   const navigate = useNavigate();
-  const { metrics, activeInvestments, riwayat } = useMemo(() => getPortfolio(), []);
-  const isEmpty = activeInvestments.length === 0 && riwayat.length === 0;
+  const { data, isLoading } = usePortfolio();
+
+  const metrics = {
+    totalInvestasiAktif: data?.total_investasi_aktif ?? 0,
+    totalBagiHasilDiterima: data?.total_bagi_hasil_diterima ?? 0,
+    umkmAktifCount: data?.umkm_aktif ?? 0,
+    returnRataRata: data?.return_rata_rata ?? 0,
+  };
+  const activeInvestments = useMemo(
+    () =>
+      (data?.investasi_aktif || []).map((inv) => ({
+        id: inv.id,
+        umkmId: inv.umkm_id,
+        name: inv.nama_usaha,
+        category: inv.kategori,
+        nominal: inv.nominal,
+        percent: inv.persen_kepemilikan,
+        bagiHasil: inv.bagi_hasil_diterima,
+        status: inv.status,
+      })),
+    [data]
+  );
+  const riwayat = useMemo(
+    () =>
+      (data?.riwayat_bagi_hasil || []).map((r) => ({
+        id: r.id,
+        periode: r.periode,
+        umkm: r.umkm,
+        bagiHasil: r.nominal,
+        status: r.status,
+      })),
+    [data]
+  );
+  const isEmpty = !isLoading && activeInvestments.length === 0 && riwayat.length === 0;
+
+  if (isLoading) {
+    return (
+      <div>
+        <div className="mb-6">
+          <div className="text-2xl font-extrabold text-neutral-900 tracking-tight">Portfolio Saya</div>
+          <div className="text-[13.5px] text-neutral-500 mt-0.5">Ringkasan investasi dan bagi hasil kamu</div>
+        </div>
+        <SkeletonList rows={3} />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -61,7 +108,7 @@ export default function Portfolio() {
               <div className="px-5">
                 {activeInvestments.map((inv) => {
                   const Icon = getCategoryIcon(inv.category);
-                  const status = STATUS_LABEL[inv.status] || STATUS_LABEL.aktif;
+                  const status = STATUS_LABEL[inv.status] || STATUS_LABEL.confirmed;
                   return (
                     <div key={inv.id} className="flex items-center justify-between gap-3 py-3.5 border-b border-neutral-100 last:border-b-0">
                       <div className="flex items-center gap-3 min-w-0">
@@ -98,19 +145,17 @@ export default function Portfolio() {
                   <tr>
                     <Th>Periode</Th>
                     <Th>UMKM</Th>
-                    <Th>Nominal</Th>
                     <Th>Bagi Hasil</Th>
                     <Th>Status</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {riwayat.map((row) => {
-                    const badge = RIWAYAT_BADGE[row.status] || RIWAYAT_BADGE.diproses;
+                    const badge = RIWAYAT_BADGE[row.status] || RIWAYAT_BADGE.pending;
                     return (
                       <tr key={row.id}>
-                        <Td>{row.periode}</Td>
+                        <Td>{formatPeriode(row.periode)}</Td>
                         <Td>{row.umkm}</Td>
-                        <Td>{formatCurrency(row.nominal)}</Td>
                         <Td>{formatCurrency(row.bagiHasil)}</Td>
                         <Td>
                           <Badge variant={badge.variant} tone="green">
