@@ -23,6 +23,11 @@ class Investor extends Model
         return [
             'tanggal_lahir' => 'date',
             'kyc_status' => KycStatus::class,
+            // Encrypted at rest -- never queried with WHERE (unlike no_ktp,
+            // which stays plaintext because its uniqueness check depends on
+            // exact-match lookups that Laravel's random-IV encryption breaks).
+            'bank' => 'encrypted',
+            'no_rekening' => 'encrypted',
         ];
     }
 

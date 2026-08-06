@@ -10,6 +10,7 @@ use App\Http\Resources\InvestmentResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\AppNotification;
 use App\Models\Investment;
+use App\Models\Umkm;
 use App\Services\InvoiceGeneratorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,7 +30,10 @@ class InvestmentController extends Controller
             $query->pendingConfirmation();
         }
 
-        return ApiResponse::success('OK', InvestmentResource::collection($query->latest()->get()));
+        $paginator = $query->latest()->paginate(15);
+        $paginator->through(fn (Investment $inv) => (new InvestmentResource($inv))->resolve($request));
+
+        return ApiResponse::success('OK', $paginator);
     }
 
     public function confirm(Request $request, Investment $investment): JsonResponse
@@ -49,12 +53,16 @@ class InvestmentController extends Controller
 
             $investment->update([
                 'status' => InvestmentStatus::Confirmed,
-                'persen_kepemilikan' => $umkm->total_terkumpul > 0
-                    ? round(($investment->nominal / $umkm->total_terkumpul) * 100, 3)
-                    : 0,
                 'confirmed_by' => $request->user()->id,
                 'confirmed_at' => now(),
             ]);
+
+            // Recompute EVERY confirmed/active investor's share against the
+            // new total, not just this one -- persen_kepemilikan is a
+            // snapshot, so leaving earlier investors' rows untouched would
+            // freeze them at whatever the pool looked like when they
+            // themselves were confirmed (e.g. 100% if they were first).
+            $this->recalculateOwnership($umkm);
 
             $this->invoices->generate($investment);
 
@@ -111,5 +119,24 @@ class InvestmentController extends Controller
         ]);
 
         return ApiResponse::success('Dana berhasil dicatat sebagai diteruskan ke UMKM.');
+    }
+
+    /**
+     * ownership % = nominal / total dana terkumpul (never target_dana --
+     * see MICROINVEST_CONTEXT.md section 3 and ProfitSharingCalculatorService,
+     * which computes each investor's payout share the same way).
+     */
+    private function recalculateOwnership(Umkm $umkm): void
+    {
+        if ($umkm->total_terkumpul <= 0) {
+            return;
+        }
+
+        Investment::where('umkm_id', $umkm->id)
+            ->whereIn('status', ['confirmed', 'active'])
+            ->get()
+            ->each(fn (Investment $inv) => $inv->update([
+                'persen_kepemilikan' => round(($inv->nominal / $umkm->total_terkumpul) * 100, 3),
+            ]));
     }
 }

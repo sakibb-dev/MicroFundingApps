@@ -26,7 +26,7 @@ class ProfitReportController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $reports = $request->user()->umkm->profitReports()->latest('periode')->get();
+        $reports = $request->user()->umkm->profitReports()->latest('periode')->paginate(15);
 
         return ApiResponse::success('OK', $reports);
     }

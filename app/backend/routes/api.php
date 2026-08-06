@@ -71,10 +71,13 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(functi
     Route::get('/dashboard', [AdminDashboardController::class, 'index']);
 
     Route::get('/kyc', [KycController::class, 'index']);
+    Route::get('/kyc/{investor}/documents/{type}', [KycController::class, 'document'])->whereIn('type', ['ktp', 'selfie']);
     Route::post('/kyc/{investor}/approve', [KycController::class, 'approve']);
     Route::post('/kyc/{investor}/reject', [KycController::class, 'reject']);
 
     Route::get('/umkm', [UmkmReviewController::class, 'index']);
+    Route::get('/umkm/{umkm}/documents/{type}', [UmkmReviewController::class, 'document'])
+        ->whereIn('type', ['nib', 'ktp_pemilik', 'laporan_keuangan', 'surat_perjanjian', 'foto_usaha']);
     Route::post('/umkm/{umkm}/approve', [UmkmReviewController::class, 'approve']);
     Route::post('/umkm/{umkm}/reject', [UmkmReviewController::class, 'reject']);
 
@@ -84,6 +87,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(functi
     Route::post('/investments/{investment}/forward', [AdminInvestmentController::class, 'forward']);
 
     Route::get('/profit-reports', [AdminProfitReportController::class, 'index']);
+    Route::get('/profit-reports/{profitReport}', [AdminProfitReportController::class, 'show']);
     Route::post('/profit-reports/{profitReport}/approve', [AdminProfitReportController::class, 'approve']);
     Route::post('/profit-reports/{profitReport}/reject', [AdminProfitReportController::class, 'reject']);
 

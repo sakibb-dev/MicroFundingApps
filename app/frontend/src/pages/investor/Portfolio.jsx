@@ -9,7 +9,8 @@ import { usePortfolio } from '../../api/investor';
 const STATUS_LABEL = {
   confirmed: { label: 'Aktif', className: 'text-green-600' },
   active: { label: 'Aktif', className: 'text-green-600' },
-  pending_confirmation: { label: 'Menunggu', className: 'text-warning' },
+  pending_confirmation: { label: 'Menunggu Konfirmasi', className: 'text-warning' },
+  rejected: { label: 'Ditolak', className: 'text-danger' },
 };
 
 const RIWAYAT_BADGE = {
@@ -98,17 +99,18 @@ export default function Portfolio() {
             <MetricCard label="Return Rata-rata" value={`${metrics.returnRataRata}%/bln`} valueClassName="text-green-600" />
           </div>
 
-          <div className="text-[15px] font-bold text-neutral-900 mb-3">Investasi aktif</div>
+          <div className="text-[15px] font-bold text-neutral-900 mb-3">Investasi saya</div>
           {activeInvestments.length === 0 ? (
             <Card>
-              <EmptyState title="Belum ada investasi aktif" body="Investasi yang sedang berjalan akan muncul di sini." />
+              <EmptyState title="Belum ada investasi" body="Investasi yang kamu buat akan muncul di sini." />
             </Card>
           ) : (
             <Card padded={false}>
               <div className="px-5">
                 {activeInvestments.map((inv) => {
                   const Icon = getCategoryIcon(inv.category);
-                  const status = STATUS_LABEL[inv.status] || STATUS_LABEL.confirmed;
+                  const status = STATUS_LABEL[inv.status] || STATUS_LABEL.pending_confirmation;
+                  const isSettled = inv.status === 'confirmed' || inv.status === 'active';
                   return (
                     <div key={inv.id} className="flex items-center justify-between gap-3 py-3.5 border-b border-neutral-100 last:border-b-0">
                       <div className="flex items-center gap-3 min-w-0">
@@ -118,12 +120,13 @@ export default function Portfolio() {
                         <div className="min-w-0">
                           <div className="text-[13.5px] font-bold text-neutral-900 truncate">{inv.name}</div>
                           <div className="text-[11.5px] text-neutral-500">
-                            {formatCurrency(inv.nominal)} &middot; {inv.percent}% kepemilikan
+                            {formatCurrency(inv.nominal)}
+                            {isSettled ? ` · ${inv.percent}% kepemilikan` : ''}
                           </div>
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-sm font-bold text-green-600">+{formatCurrency(inv.bagiHasil)}</div>
+                        {isSettled && <div className="text-sm font-bold text-green-600">+{formatCurrency(inv.bagiHasil)}</div>}
                         <div className={`text-[11px] mt-0.5 font-semibold ${status.className}`}>{status.label}</div>
                       </div>
                     </div>

@@ -29,11 +29,17 @@ class PortfolioController extends Controller
             ->map(fn ($rows) => $rows->sum('nominal_bagi_hasil'));
 
         return ApiResponse::success('OK', [
+            // Aggregate metrics only ever count confirmed/active money --
+            // a pending or rejected investment isn't "invested" yet.
             'total_investasi_aktif' => $active->sum('nominal'),
             'total_bagi_hasil_diterima' => $totalBagiHasil,
             'umkm_aktif' => $active->pluck('umkm_id')->unique()->count(),
             'return_rata_rata' => $avgReturnPct !== null ? round((float) $avgReturnPct, 2) : 0,
-            'investasi_aktif' => $active->values()->map(fn ($inv) => [
+            // But the list itself includes EVERY investment regardless of
+            // status -- an investor whose only investment is still pending
+            // confirmation should see it ("Menunggu Konfirmasi"), not an
+            // empty portfolio as if their submission vanished.
+            'investasi_aktif' => $investments->values()->map(fn ($inv) => [
                 'id' => $inv->id,
                 'umkm_id' => $inv->umkm_id,
                 'nama_usaha' => $inv->umkm->nama_usaha,

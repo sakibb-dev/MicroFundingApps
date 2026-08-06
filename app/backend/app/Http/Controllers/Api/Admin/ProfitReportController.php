@@ -29,7 +29,48 @@ class ProfitReportController extends Controller
             $query->submitted();
         }
 
-        return ApiResponse::success('OK', $query->latest('periode')->get());
+        return ApiResponse::success('OK', $query->latest('periode')->paginate(15));
+    }
+
+    /**
+     * Per-investor breakdown with bank details, so an admin can actually
+     * process the disbursement transfers -- not returned on index() since
+     * every list row loading its own distributions would be N+1.
+     */
+    public function show(ProfitReport $profitReport): JsonResponse
+    {
+        $profitReport->load(['umkm', 'distributions.investment.investor.user']);
+
+        return ApiResponse::success('OK', [
+            'id' => $profitReport->id,
+            'periode' => $profitReport->periode,
+            'status' => $profitReport->status->value,
+            'keuntungan_kotor' => $profitReport->keuntungan_kotor,
+            'biaya_operasional' => $profitReport->biaya_operasional,
+            'keuntungan_bersih' => $profitReport->keuntungan_bersih,
+            'persen_bagi_hasil_snapshot' => (float) $profitReport->persen_bagi_hasil_snapshot,
+            'persen_fee_platform_snapshot' => (float) $profitReport->persen_fee_platform_snapshot,
+            'total_bagi_hasil_investor' => $profitReport->total_bagi_hasil_investor,
+            'fee_platform' => $profitReport->fee_platform,
+            'total_dibayarkan' => $profitReport->total_dibayarkan,
+            'catatan' => $profitReport->catatan,
+            'umkm' => [
+                'id' => $profitReport->umkm->id,
+                'nama_usaha' => $profitReport->umkm->nama_usaha,
+                'rekening' => ['bank' => $profitReport->umkm->bank, 'no_rekening' => $profitReport->umkm->no_rekening],
+            ],
+            'distribusi' => $profitReport->distributions->map(fn ($d) => [
+                'id' => $d->id,
+                'investor_nama' => $d->investment?->investor?->user?->name,
+                'rekening' => [
+                    'bank' => $d->investment?->investor?->bank,
+                    'no_rekening' => $d->investment?->investor?->no_rekening,
+                ],
+                'persen_kepemilikan' => (float) $d->persen_kepemilikan_snapshot,
+                'nominal_bagi_hasil' => $d->nominal_bagi_hasil,
+                'status' => $d->status->value,
+            ]),
+        ]);
     }
 
     public function approve(Request $request, ProfitReport $profitReport): JsonResponse

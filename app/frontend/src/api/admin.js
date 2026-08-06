@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from './client';
+import { unwrapPaginated } from './pagination';
 
 async function unwrap(promise) {
   const { data } = await promise;
@@ -13,10 +14,10 @@ export function useAdminDashboard() {
   });
 }
 
-export function useKycList(status) {
+export function useKycList(status, page = 1) {
   return useQuery({
-    queryKey: ['admin', 'kyc', status],
-    queryFn: () => unwrap(api.get('/admin/kyc', { params: status && status !== 'all' ? { status } : {} })),
+    queryKey: ['admin', 'kyc', status, page],
+    queryFn: () => unwrapPaginated(api.get('/admin/kyc', { params: { page, ...(status && status !== 'all' ? { status } : {}) } })),
   });
 }
 
@@ -36,10 +37,10 @@ export function useRejectKyc() {
   });
 }
 
-export function useAdminUmkmList(status) {
+export function useAdminUmkmList(status, page = 1) {
   return useQuery({
-    queryKey: ['admin', 'umkm', status],
-    queryFn: () => unwrap(api.get('/admin/umkm', { params: status && status !== 'all' ? { status } : {} })),
+    queryKey: ['admin', 'umkm', status, page],
+    queryFn: () => unwrapPaginated(api.get('/admin/umkm', { params: { page, ...(status && status !== 'all' ? { status } : {}) } })),
   });
 }
 
@@ -59,10 +60,10 @@ export function useRejectUmkm() {
   });
 }
 
-export function useAdminInvestmentList(status) {
+export function useAdminInvestmentList(status, page = 1) {
   return useQuery({
-    queryKey: ['admin', 'investments', status],
-    queryFn: () => unwrap(api.get('/admin/investments', { params: status ? { status } : {} })),
+    queryKey: ['admin', 'investments', status, page],
+    queryFn: () => unwrapPaginated(api.get('/admin/investments', { params: { page, ...(status ? { status } : {}) } })),
   });
 }
 
@@ -82,10 +83,18 @@ export function useRejectInvestment() {
   });
 }
 
-export function useAdminProfitReportList(status) {
+export function useAdminProfitReportList(status, page = 1) {
   return useQuery({
-    queryKey: ['admin', 'profit-reports', status],
-    queryFn: () => unwrap(api.get('/admin/profit-reports', { params: status ? { status } : {} })),
+    queryKey: ['admin', 'profit-reports', status, page],
+    queryFn: () => unwrapPaginated(api.get('/admin/profit-reports', { params: { page, ...(status ? { status } : {}) } })),
+  });
+}
+
+export function useProfitReportDetail(id) {
+  return useQuery({
+    queryKey: ['admin', 'profit-reports', 'detail', id],
+    queryFn: () => unwrap(api.get(`/admin/profit-reports/${id}`)),
+    enabled: id != null,
   });
 }
 

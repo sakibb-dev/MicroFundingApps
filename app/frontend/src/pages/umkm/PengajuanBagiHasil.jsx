@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, Input, TextArea, FileUpload, Button, ConfirmDialog, Badge, Table, Th, Td, EmptyState, Skeleton } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency, formatNumberInput, parseCurrencyInput, formatPeriode } from '../../utils/format';
-import { useUmkmDashboard, useUmkmInvestorList, useSubmitProfitReport, usePlatformFeeInfo } from '../../api/umkm';
+import { useUmkmDashboard, useAllUmkmInvestors, useSubmitProfitReport, usePlatformFeeInfo } from '../../api/umkm';
 
 const VISIBLE_BREAKDOWN_COUNT = 3;
 
@@ -11,7 +11,7 @@ export default function PengajuanBagiHasil() {
   const toast = useToast();
   const navigate = useNavigate();
   const { data: dashboard, isLoading: dashboardLoading } = useUmkmDashboard();
-  const { data: investorData, isLoading: investorsLoading } = useUmkmInvestorList();
+  const { data: investorData, isLoading: investorsLoading } = useAllUmkmInvestors();
   const { data: feeInfo, isLoading: feeLoading } = usePlatformFeeInfo();
   const submitReport = useSubmitProfitReport();
 

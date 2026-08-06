@@ -161,7 +161,7 @@ function SectionDesc({ children, align = 'center', dark = false, className = '' 
 function UmkmCard({ umkm }) {
   const Icon = umkm.icon;
   return (
-    <div className="bg-white border border-neutral-100 rounded-xl overflow-hidden transition-shadow hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
+    <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm transition-shadow hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
       <div className="h-40 relative flex items-center justify-center" style={{ background: umkm.bg }}>
         <Icon size={32} style={{ color: umkm.iconColor }} aria-hidden="true" />
         <Badge variant={umkm.status.variant} className="absolute top-3 right-3">
@@ -307,7 +307,7 @@ export default function LandingPage() {
             ['Pilih UMKM & Investasikan', 'Telusuri UMKM terverifikasi, pilih yang sesuai profil risiko, dan transfer danamu langsung.'],
             ['Terima Bagi Hasil Bulanan', 'Setiap bulan terima porsi bagi hasil proporsional dari keuntungan bersih UMKM yang kamu danai.'],
           ].map(([title, desc], i) => (
-            <div key={title} className="bg-white border border-neutral-100 rounded-xl p-7 relative z-10">
+            <div key={title} className="bg-white border border-neutral-200 rounded-xl p-7 relative z-10 shadow-sm hover:shadow-md transition-shadow">
               <div className="w-12 h-12 rounded-full bg-green-800 text-white text-lg font-extrabold flex items-center justify-center mb-5">
                 {i + 1}
               </div>
@@ -367,7 +367,7 @@ export default function LandingPage() {
         <SectionDesc>Lebih dari 3.200 investor aktif sudah mempercayakan dananya melalui MicroInvest.</SectionDesc>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {TESTIMONI.map((t) => (
-            <div key={t.name} className="bg-white border border-neutral-100 rounded-xl p-6">
+            <div key={t.name} className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex gap-0.5 text-amber-500 mb-3.5">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <IconStarFilled key={i} size={14} className={i < t.stars ? '' : 'text-neutral-200'} />

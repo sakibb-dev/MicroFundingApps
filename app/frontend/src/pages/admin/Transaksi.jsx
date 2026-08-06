@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { IconArrowsExchange, IconPaperclip } from '@tabler/icons-react';
-import { Card, Chip, TextArea, Button, Badge, Table, Th, Td, ConfirmDialog, Modal, EmptyState, SkeletonTable } from '../../components/ui';
+import { Card, Chip, TextArea, Button, Badge, Table, Th, Td, ConfirmDialog, Modal, EmptyState, SkeletonTable, CopyButton, Pagination } from '../../components/ui';
 import { formatCurrency } from '../../utils/format';
 import { useAdminInvestmentList, useConfirmInvestment, useRejectInvestment, useForwardInvestment } from '../../api/admin';
 import { useToast } from '../../context/ToastContext';
@@ -22,18 +22,24 @@ const FILTERS = [
 export default function Transaksi() {
   const toast = useToast();
   const [filter, setFilter] = useState('pending_confirmation');
-  const { data, isLoading } = useAdminInvestmentList(filter);
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useAdminInvestmentList(filter, page);
   const confirmInvestment = useConfirmInvestment();
   const rejectInvestment = useRejectInvestment();
   const forwardInvestment = useForwardInvestment();
 
-  const items = data || [];
+  const items = data?.items || [];
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [rejectTarget, setRejectTarget] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [forwardTarget, setForwardTarget] = useState(null);
 
-  const pendingCount = filter === 'pending_confirmation' ? items.length : undefined;
+  const pendingCount = filter === 'pending_confirmation' ? data?.meta?.total : undefined;
+
+  function handleFilterChange(key) {
+    setFilter(key);
+    setPage(1);
+  }
   const submitting = confirmInvestment.isPending || rejectInvestment.isPending || forwardInvestment.isPending;
 
   function handleForward() {
@@ -90,7 +96,7 @@ export default function Transaksi() {
 
       <div className="flex flex-wrap gap-1.5 mb-4">
         {FILTERS.map((f) => (
-          <Chip key={f.key} tone="teal" active={filter === f.key} onClick={() => setFilter(f.key)}>
+          <Chip key={f.key} tone="teal" active={filter === f.key} onClick={() => handleFilterChange(f.key)}>
             {f.label}
             {f.key === 'pending_confirmation' && pendingCount != null ? ` (${pendingCount})` : ''}
           </Chip>
@@ -118,6 +124,7 @@ export default function Transaksi() {
                   <Th>Investor</Th>
                   <Th>UMKM</Th>
                   <Th>Nominal</Th>
+                  <Th>Rekening Tujuan (UMKM)</Th>
                   <Th>Bukti Transfer</Th>
                   <Th>Status</Th>
                   <Th>Aksi</Th>
@@ -128,9 +135,29 @@ export default function Transaksi() {
                   const badge = STATUS_BADGE[item.status] || STATUS_BADGE.pending_confirmation;
                   return (
                     <tr key={item.id}>
-                      <Td className="font-medium text-neutral-900">{item.investor?.nama}</Td>
+                      <Td className="font-medium text-neutral-900">
+                        {item.investor?.nama}
+                        {item.investor?.rekening?.bank && (
+                          <div className="flex items-center gap-1 text-[10.5px] font-normal text-neutral-400 mt-0.5">
+                            {item.investor.rekening.bank} · {item.investor.rekening.no_rekening}
+                            <CopyButton value={item.investor.rekening.no_rekening} />
+                          </div>
+                        )}
+                      </Td>
                       <Td className="text-neutral-500">{item.umkm?.nama_usaha}</Td>
                       <Td className="whitespace-nowrap">{formatCurrency(item.nominal)}</Td>
+                      <Td>
+                        {item.umkm?.rekening?.bank ? (
+                          <div className="flex items-center gap-1 whitespace-nowrap">
+                            <span>
+                              {item.umkm.rekening.bank} · {item.umkm.rekening.no_rekening}
+                            </span>
+                            <CopyButton value={item.umkm.rekening.no_rekening} />
+                          </div>
+                        ) : (
+                          <span className="text-neutral-400">Belum diisi UMKM</span>
+                        )}
+                      </Td>
                       <Td>
                         <span className="inline-flex items-center gap-1.5 text-neutral-500">
                           <IconPaperclip size={14} aria-hidden="true" /> {item.bukti_transfer_path ? 'Terlampir' : '—'}
@@ -166,6 +193,7 @@ export default function Transaksi() {
             </Table>
           )}
         </div>
+        <Pagination meta={data?.meta} onPageChange={setPage} />
       </Card>
 
       <ConfirmDialog
@@ -190,7 +218,11 @@ export default function Transaksi() {
         title="Catat dana sudah diteruskan ke UMKM?"
         description={
           forwardTarget
-            ? `Konfirmasi bahwa ${formatCurrency(forwardTarget.nominal)} sudah kamu transfer manual ke rekening ${forwardTarget.umkm?.nama_usaha}. Aksi ini hanya mencatat status di sistem, tidak memindahkan dana secara otomatis.`
+            ? `Konfirmasi bahwa ${formatCurrency(forwardTarget.nominal)} sudah kamu transfer manual ke ${forwardTarget.umkm?.nama_usaha}${
+                forwardTarget.umkm?.rekening?.bank
+                  ? ` (${forwardTarget.umkm.rekening.bank} · ${forwardTarget.umkm.rekening.no_rekening})`
+                  : ''
+              }. Aksi ini hanya mencatat status di sistem, tidak memindahkan dana secara otomatis.`
             : ''
         }
         confirmLabel="Sudah Diteruskan"

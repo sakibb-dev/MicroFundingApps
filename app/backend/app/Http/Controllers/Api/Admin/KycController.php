@@ -11,6 +11,8 @@ use App\Models\Investor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class KycController extends Controller
 {
@@ -22,7 +24,7 @@ class KycController extends Controller
             $query->where('kyc_status', $status);
         }
 
-        return ApiResponse::success('OK', $query->latest()->get()->map(fn (Investor $i) => [
+        return ApiResponse::success('OK', $query->latest()->paginate(15)->through(fn (Investor $i) => [
             'id' => $i->id,
             'nama' => $i->user->name,
             'email' => $i->user->email,
@@ -35,6 +37,29 @@ class KycController extends Controller
                 'selfie' => $i->kycDocuments->first()->path_selfie,
             ] : null,
         ]));
+    }
+
+    /**
+     * Streams the actual file bytes for review -- documents live on the
+     * private 'local' disk (storage/app/private) so there's no public URL
+     * for them; access is gated by admin role (route middleware) plus
+     * looking the path up ourselves from the investor's own record, never
+     * trusting a client-supplied path.
+     */
+    public function document(Investor $investor, string $type): StreamedResponse|JsonResponse
+    {
+        if (! in_array($type, ['ktp', 'selfie'], true)) {
+            return ApiResponse::error('Tipe dokumen tidak valid.', null, null, 404);
+        }
+
+        $doc = $investor->kycDocuments()->latest()->first();
+        $path = $type === 'ktp' ? $doc?->path_ktp : $doc?->path_selfie;
+
+        if (! $path || ! Storage::disk('local')->exists($path)) {
+            return ApiResponse::error('Dokumen tidak ditemukan.', null, null, 404);
+        }
+
+        return Storage::disk('local')->response($path);
     }
 
     public function approve(Request $request, Investor $investor): JsonResponse

@@ -12,6 +12,8 @@ use App\Models\Umkm;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UmkmReviewController extends Controller
 {
@@ -23,7 +25,36 @@ class UmkmReviewController extends Controller
             $query->where('status', $status);
         }
 
-        return ApiResponse::success('OK', UmkmResource::collection($query->latest()->get()));
+        $paginator = $query->latest()->paginate(15);
+        $paginator->through(fn (Umkm $u) => (new UmkmResource($u))->resolve($request));
+
+        return ApiResponse::success('OK', $paginator);
+    }
+
+    /**
+     * Streams the actual file bytes for review -- same rationale as
+     * Admin\KycController::document(). foto_usaha is an array, so it takes
+     * an extra ?index= query param to pick which photo.
+     */
+    public function document(Request $request, Umkm $umkm): StreamedResponse|JsonResponse
+    {
+        $type = $request->route('type');
+        $doc = $umkm->document;
+
+        $path = match ($type) {
+            'nib' => $doc?->path_nib,
+            'ktp_pemilik' => $doc?->path_ktp_pemilik,
+            'laporan_keuangan' => $doc?->path_laporan_keuangan,
+            'surat_perjanjian' => $doc?->path_surat_perjanjian,
+            'foto_usaha' => $doc?->path_foto_usaha[(int) $request->query('index', 0)] ?? null,
+            default => null,
+        };
+
+        if (! $path || ! Storage::disk('local')->exists($path)) {
+            return ApiResponse::error('Dokumen tidak ditemukan.', null, null, 404);
+        }
+
+        return Storage::disk('local')->response($path);
     }
 
     public function approve(Umkm $umkm): JsonResponse

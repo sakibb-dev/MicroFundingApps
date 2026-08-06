@@ -31,6 +31,7 @@ class UmkmResource extends JsonResource
             ),
             'dokumen' => $this->whenLoaded('document', fn () => [
                 'nib' => $this->document->path_nib,
+                'ktp_pemilik' => $this->document->path_ktp_pemilik,
                 'laporan_keuangan' => $this->document->path_laporan_keuangan,
                 'foto_usaha' => $this->document->path_foto_usaha,
                 'surat_perjanjian' => $this->document->path_surat_perjanjian,

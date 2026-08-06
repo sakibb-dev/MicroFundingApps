@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { IconIdBadge2, IconCameraSelfie } from '@tabler/icons-react';
-import { Card, Chip, Input, TextArea, Button, Badge, Table, Th, Td, ConfirmDialog, EmptyState, SkeletonTable } from '../../components/ui';
+import { IconIdBadge2 } from '@tabler/icons-react';
+import { Card, Chip, Input, TextArea, Button, Badge, Table, Th, Td, ConfirmDialog, EmptyState, SkeletonTable, Pagination, DocumentViewer } from '../../components/ui';
 import { formatDate } from '../../utils/format';
 import { useKycList, useApproveKyc, useRejectKyc } from '../../api/admin';
 import { useToast } from '../../context/ToastContext';
@@ -18,24 +18,15 @@ const FILTERS = [
   { key: 'rejected', label: 'Ditolak' },
 ];
 
-function DocViewer({ icon: Icon, label, available }) {
-  return (
-    <div className="bg-neutral-100 rounded-lg h-36 flex flex-col items-center justify-center gap-1.5 text-[12px] text-neutral-500">
-      <Icon size={24} aria-hidden="true" />
-      {label}
-      {!available && <span className="text-[10.5px] text-neutral-400">Belum diunggah</span>}
-    </div>
-  );
-}
-
 export default function Kyc() {
   const toast = useToast();
   const [filter, setFilter] = useState('all');
-  const { data, isLoading } = useKycList(filter);
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useKycList(filter, page);
   const approveKyc = useApproveKyc();
   const rejectKyc = useRejectKyc();
 
-  const items = data || [];
+  const items = data?.items || [];
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const [note, setNote] = useState('');
@@ -44,7 +35,12 @@ export default function Kyc() {
   const [approveConfirmOpen, setApproveConfirmOpen] = useState(false);
   const [rejectConfirmOpen, setRejectConfirmOpen] = useState(false);
 
-  const pendingCount = items.filter((i) => i.status === 'pending').length;
+  const pendingCount = filter === 'pending' ? data?.meta?.total ?? 0 : null;
+
+  function handleFilterChange(key) {
+    setFilter(key);
+    setPage(1);
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -104,16 +100,16 @@ export default function Kyc() {
 
       <div className="flex flex-wrap gap-1.5 mb-4">
         {FILTERS.map((f) => (
-          <Chip key={f.key} tone="teal" active={filter === f.key} onClick={() => setFilter(f.key)}>
+          <Chip key={f.key} tone="teal" active={filter === f.key} onClick={() => handleFilterChange(f.key)}>
             {f.label}
-            {f.key === 'pending' ? ` (${pendingCount})` : ''}
+            {f.key === 'pending' && pendingCount != null ? ` (${pendingCount})` : ''}
           </Chip>
         ))}
       </div>
 
       <div className="mb-4">
         <Input
-          placeholder="Cari nama atau email investor..."
+          placeholder="Cari nama atau email investor di halaman ini..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           aria-label="Cari nama atau email investor"
@@ -170,6 +166,7 @@ export default function Kyc() {
             </Table>
           )}
         </div>
+        {!search && <Pagination meta={data?.meta} onPageChange={setPage} />}
       </Card>
 
       {selected && (
@@ -196,8 +193,14 @@ export default function Kyc() {
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4 mb-4">
-            <DocViewer icon={IconIdBadge2} label="KTP" available={Boolean(selected.dokumen?.ktp)} />
-            <DocViewer icon={IconCameraSelfie} label="Selfie + KTP" available={Boolean(selected.dokumen?.selfie)} />
+            <DocumentViewer
+              label="KTP"
+              url={selected.dokumen?.ktp ? `/admin/kyc/${selected.id}/documents/ktp` : null}
+            />
+            <DocumentViewer
+              label="Selfie + KTP"
+              url={selected.dokumen?.selfie ? `/admin/kyc/${selected.id}/documents/selfie` : null}
+            />
           </div>
 
           <TextArea

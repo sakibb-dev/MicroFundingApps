@@ -42,7 +42,10 @@ export default function Dashboard() {
   const { data: kycItems, isLoading: kycLoading } = useKycList('all');
   const { data: umkmItems, isLoading: umkmLoading } = useAdminUmkmList('all');
 
-  const activity = useMemo(() => buildActivity(kycItems || [], umkmItems || []), [kycItems, umkmItems]);
+  const activity = useMemo(
+    () => buildActivity(kycItems?.items || [], umkmItems?.items || []),
+    [kycItems, umkmItems]
+  );
   const isLoading = metricsLoading || kycLoading || umkmLoading;
 
   if (isLoading || !metrics) {

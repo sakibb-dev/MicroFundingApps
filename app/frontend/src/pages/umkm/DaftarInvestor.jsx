@@ -1,18 +1,20 @@
+import { useState } from 'react';
 import { IconUsers } from '@tabler/icons-react';
-import { Card, Table, Th, Td, EmptyState, SkeletonTable } from '../../components/ui';
+import { Card, Table, Th, Td, EmptyState, SkeletonTable, Pagination } from '../../components/ui';
 import { formatCurrency, formatDate } from '../../utils/format';
 import { useUmkmInvestorList } from '../../api/umkm';
 
 export default function DaftarInvestor() {
-  const { data, isLoading } = useUmkmInvestorList();
-  const investors = data || [];
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useUmkmInvestorList(page);
+  const investors = data?.items || [];
 
   return (
     <div>
       <div className="mb-5">
         <div className="text-2xl font-extrabold text-neutral-900 tracking-tight">Daftar Investor</div>
         <div className="text-[13px] text-neutral-500 mt-1">
-          {isLoading ? 'Memuat...' : `${investors.length} investor mendanai usahamu`}
+          {isLoading ? 'Memuat...' : `${data?.meta?.total ?? 0} investor mendanai usahamu`}
         </div>
       </div>
 
@@ -27,26 +29,29 @@ export default function DaftarInvestor() {
             tone="teal"
           />
         ) : (
-          <Table>
-            <thead>
-              <tr>
-                <Th>Investor</Th>
-                <Th>Nominal</Th>
-                <Th>% Kepemilikan</Th>
-                <Th>Tanggal Investasi</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {investors.map((inv, i) => (
-                <tr key={i}>
-                  <Td className="font-medium text-neutral-900">{inv.nama}</Td>
-                  <Td>{formatCurrency(inv.nominal)}</Td>
-                  <Td>{inv.persen_kepemilikan}%</Td>
-                  <Td>{inv.tanggal_investasi ? formatDate(inv.tanggal_investasi) : '—'}</Td>
+          <>
+            <Table>
+              <thead>
+                <tr>
+                  <Th>Investor</Th>
+                  <Th>Nominal</Th>
+                  <Th>% Kepemilikan</Th>
+                  <Th>Tanggal Investasi</Th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody>
+                {investors.map((inv, i) => (
+                  <tr key={i}>
+                    <Td className="font-medium text-neutral-900">{inv.nama}</Td>
+                    <Td>{formatCurrency(inv.nominal)}</Td>
+                    <Td>{inv.persen_kepemilikan}%</Td>
+                    <Td>{inv.tanggal_investasi ? formatDate(inv.tanggal_investasi) : '—'}</Td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+            <Pagination meta={data?.meta} onPageChange={setPage} />
+          </>
         )}
       </Card>
     </div>

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from './client';
+import { unwrapPaginated } from './pagination';
 
 async function unwrap(promise) {
   const { data } = await promise;
@@ -13,17 +14,26 @@ export function useUmkmDashboard() {
   });
 }
 
-export function useUmkmInvestorList() {
+export function useUmkmInvestorList(page = 1) {
   return useQuery({
-    queryKey: ['umkm', 'investors'],
-    queryFn: () => unwrap(api.get('/umkm-panel/investors')),
+    queryKey: ['umkm', 'investors', page],
+    queryFn: () => unwrapPaginated(api.get('/umkm-panel/investors', { params: { page } })),
   });
 }
 
-export function useProfitReports() {
+// Unpaginated -- used by the Pengajuan Bagi Hasil breakdown preview, which
+// needs every investor to reconcile its totals, not just one page's worth.
+export function useAllUmkmInvestors() {
   return useQuery({
-    queryKey: ['umkm', 'profit-reports'],
-    queryFn: () => unwrap(api.get('/umkm-panel/profit-reports')),
+    queryKey: ['umkm', 'investors', 'all'],
+    queryFn: async () => (await unwrapPaginated(api.get('/umkm-panel/investors', { params: { per_page: 500 } }))).items,
+  });
+}
+
+export function useProfitReports(page = 1) {
+  return useQuery({
+    queryKey: ['umkm', 'profit-reports', page],
+    queryFn: () => unwrapPaginated(api.get('/umkm-panel/profit-reports', { params: { page } })),
   });
 }
 

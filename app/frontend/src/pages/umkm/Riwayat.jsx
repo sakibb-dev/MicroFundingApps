@@ -1,4 +1,5 @@
-import { Card, Table, Th, Td, Badge, EmptyState, SkeletonTable } from '../../components/ui';
+import { useState } from 'react';
+import { Card, Table, Th, Td, Badge, EmptyState, SkeletonTable, Pagination } from '../../components/ui';
 import { formatCurrency, formatPeriode } from '../../utils/format';
 import { useProfitReports } from '../../api/umkm';
 
@@ -12,8 +13,9 @@ const STATUS_LABEL = {
 };
 
 export default function Riwayat() {
-  const { data, isLoading } = useProfitReports();
-  const riwayat = data || [];
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useProfitReports(page);
+  const riwayat = data?.items || [];
 
   return (
     <div>
@@ -28,35 +30,38 @@ export default function Riwayat() {
         ) : riwayat.length === 0 ? (
           <EmptyState title="Belum ada pengajuan" body="Riwayat pengajuan bagi hasilmu akan muncul di sini." tone="teal" />
         ) : (
-          <Table>
-            <thead>
-              <tr>
-                <Th>Periode</Th>
-                <Th>Keuntungan Bersih</Th>
-                <Th>Total Bagi Hasil</Th>
-                <Th>Fee Platform</Th>
-                <Th>Status</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {riwayat.map((r) => {
-                const status = STATUS_LABEL[r.status] || STATUS_LABEL.submitted;
-                return (
-                  <tr key={r.id}>
-                    <Td className="font-medium text-neutral-900">{formatPeriode(r.periode)}</Td>
-                    <Td>{formatCurrency(r.keuntungan_bersih)}</Td>
-                    <Td>{formatCurrency(r.total_bagi_hasil_investor)}</Td>
-                    <Td>{formatCurrency(r.fee_platform)}</Td>
-                    <Td>
-                      <Badge variant={status.variant} tone="teal">
-                        {status.label}
-                      </Badge>
-                    </Td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </Table>
+          <>
+            <Table>
+              <thead>
+                <tr>
+                  <Th>Periode</Th>
+                  <Th>Keuntungan Bersih</Th>
+                  <Th>Total Bagi Hasil</Th>
+                  <Th>Fee Platform</Th>
+                  <Th>Status</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {riwayat.map((r) => {
+                  const status = STATUS_LABEL[r.status] || STATUS_LABEL.submitted;
+                  return (
+                    <tr key={r.id}>
+                      <Td className="font-medium text-neutral-900">{formatPeriode(r.periode)}</Td>
+                      <Td>{formatCurrency(r.keuntungan_bersih)}</Td>
+                      <Td>{formatCurrency(r.total_bagi_hasil_investor)}</Td>
+                      <Td>{formatCurrency(r.fee_platform)}</Td>
+                      <Td>
+                        <Badge variant={status.variant} tone="teal">
+                          {status.label}
+                        </Badge>
+                      </Td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </Table>
+            <Pagination meta={data?.meta} onPageChange={setPage} />
+          </>
         )}
       </Card>
     </div>

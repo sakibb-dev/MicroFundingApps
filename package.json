@@ -1,0 +1,12 @@
+{
+  "name": "microinvest",
+  "private": true,
+  "scripts": {
+    "serve": "concurrently -n backend,frontend -c blue,green \"npm:serve:backend\" \"npm:serve:frontend\"",
+    "serve:backend": "cd app/backend && php artisan serve --port=8001",
+    "serve:frontend": "cd app/frontend && npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}

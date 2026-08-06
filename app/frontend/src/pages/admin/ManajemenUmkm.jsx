@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { IconBuildingStore, IconFileText, IconChartBar, IconIdBadge2, IconPhoto } from '@tabler/icons-react';
-import { Card, Chip, TextArea, Button, Badge, Table, Th, Td, ConfirmDialog, EmptyState, SkeletonTable } from '../../components/ui';
+import { IconBuildingStore } from '@tabler/icons-react';
+import { Card, Chip, TextArea, Button, Badge, Table, Th, Td, ConfirmDialog, EmptyState, SkeletonTable, Pagination, DocumentViewer } from '../../components/ui';
 import { formatCurrency } from '../../utils/format';
 import { useAdminUmkmList, useApproveUmkm, useRejectUmkm } from '../../api/admin';
 import { useToast } from '../../context/ToastContext';
@@ -18,24 +18,15 @@ const FILTERS = [
   { key: 'rejected', label: 'Ditolak' },
 ];
 
-function DocViewer({ icon: Icon, label, available }) {
-  return (
-    <div className="bg-neutral-100 rounded-lg h-32 flex flex-col items-center justify-center gap-1.5 text-[12px] text-neutral-500 text-center px-2">
-      <Icon size={24} aria-hidden="true" />
-      {label}
-      {available === false && <span className="text-[10.5px] text-neutral-400">Belum diunggah</span>}
-    </div>
-  );
-}
-
 export default function ManajemenUmkm() {
   const toast = useToast();
   const [filter, setFilter] = useState('all');
-  const { data, isLoading } = useAdminUmkmList(filter);
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useAdminUmkmList(filter, page);
   const approveUmkm = useApproveUmkm();
   const rejectUmkm = useRejectUmkm();
 
-  const items = data || [];
+  const items = data?.items || [];
   const [selectedId, setSelectedId] = useState(null);
   const [note, setNote] = useState('');
   const [rejecting, setRejecting] = useState(false);
@@ -43,8 +34,13 @@ export default function ManajemenUmkm() {
   const [approveConfirmOpen, setApproveConfirmOpen] = useState(false);
   const [rejectConfirmOpen, setRejectConfirmOpen] = useState(false);
 
-  const pendingCount = items.filter((i) => i.status === 'pending').length;
+  const pendingCount = filter === 'pending' ? data?.meta?.total ?? 0 : null;
   const selected = items.find((i) => i.id === selectedId) || null;
+
+  function handleFilterChange(key) {
+    setFilter(key);
+    setPage(1);
+  }
 
   function openReview(id) {
     setSelectedId(id);
@@ -96,9 +92,9 @@ export default function ManajemenUmkm() {
 
       <div className="flex flex-wrap gap-1.5 mb-4">
         {FILTERS.map((f) => (
-          <Chip key={f.key} tone="teal" active={filter === f.key} onClick={() => setFilter(f.key)}>
+          <Chip key={f.key} tone="teal" active={filter === f.key} onClick={() => handleFilterChange(f.key)}>
             {f.label}
-            {f.key === 'pending' ? ` (${pendingCount})` : ''}
+            {f.key === 'pending' && pendingCount != null ? ` (${pendingCount})` : ''}
           </Chip>
         ))}
       </div>
@@ -153,6 +149,7 @@ export default function ManajemenUmkm() {
             </Table>
           )}
         </div>
+        <Pagination meta={data?.meta} onPageChange={setPage} />
       </Card>
 
       {selected && (
@@ -179,15 +176,45 @@ export default function ManajemenUmkm() {
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4 mb-4">
-            <DocViewer icon={IconFileText} label="NIB Usaha" available={Boolean(selected.dokumen?.nib)} />
-            <DocViewer icon={IconChartBar} label="Laporan Keuangan" available={Boolean(selected.dokumen?.laporan_keuangan)} />
-            <DocViewer icon={IconIdBadge2} label="KTP Pemilik" />
-            <DocViewer
-              icon={IconPhoto}
-              label="Foto Usaha"
-              available={Array.isArray(selected.dokumen?.foto_usaha) && selected.dokumen.foto_usaha.length > 0}
+            <DocumentViewer
+              label="NIB Usaha"
+              url={selected.dokumen?.nib ? `/admin/umkm/${selected.id}/documents/nib` : null}
+              height="h-32"
+            />
+            <DocumentViewer
+              label="Laporan Keuangan"
+              url={selected.dokumen?.laporan_keuangan ? `/admin/umkm/${selected.id}/documents/laporan_keuangan` : null}
+              height="h-32"
+            />
+            <DocumentViewer
+              label="KTP Pemilik"
+              url={selected.dokumen?.ktp_pemilik ? `/admin/umkm/${selected.id}/documents/ktp_pemilik` : null}
+              height="h-32"
+            />
+            <DocumentViewer
+              label="Surat Perjanjian"
+              url={selected.dokumen?.surat_perjanjian ? `/admin/umkm/${selected.id}/documents/surat_perjanjian` : null}
+              height="h-32"
             />
           </div>
+
+          {Array.isArray(selected.dokumen?.foto_usaha) && selected.dokumen.foto_usaha.length > 0 && (
+            <>
+              <div className="text-[12.5px] font-semibold text-neutral-700 mb-2">
+                Foto Usaha ({selected.dokumen.foto_usaha.length})
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                {selected.dokumen.foto_usaha.map((_, i) => (
+                  <DocumentViewer
+                    key={i}
+                    label={`Foto ${i + 1}`}
+                    url={`/admin/umkm/${selected.id}/documents/foto_usaha?index=${i}`}
+                    height="h-24"
+                  />
+                ))}
+              </div>
+            </>
+          )}
 
           <TextArea
             label="Catatan admin"

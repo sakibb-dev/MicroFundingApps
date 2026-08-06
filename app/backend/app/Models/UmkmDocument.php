@@ -12,7 +12,7 @@ class UmkmDocument extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'umkm_id', 'path_nib', 'path_laporan_keuangan', 'path_foto_usaha', 'path_surat_perjanjian',
+        'umkm_id', 'path_nib', 'path_ktp_pemilik', 'path_laporan_keuangan', 'path_foto_usaha', 'path_surat_perjanjian',
     ];
 
     protected function casts(): array

@@ -110,13 +110,11 @@ class AuthController extends Controller
             UmkmDocument::create([
                 'umkm_id' => $umkm->id,
                 'path_nib' => $this->documents->store($nibFile, 'umkm', $umkm->id, 'nib'),
+                'path_ktp_pemilik' => $this->documents->store($ktpFile, 'umkm', $umkm->id, 'ktp_pemilik'),
                 'path_laporan_keuangan' => $this->documents->store($laporanFile, 'umkm', $umkm->id, 'laporan_keuangan'),
                 'path_foto_usaha' => $this->documents->storeMany($fotoFiles, 'umkm', $umkm->id, 'foto_usaha'),
                 'path_surat_perjanjian' => $this->documents->store($suratFile, 'umkm', $umkm->id, 'surat_perjanjian'),
             ]);
-            // NOTE: ktp_pemilik is stored alongside the other UMKM documents on disk
-            // but intentionally not modeled as its own column in this pass.
-            $this->documents->store($ktpFile, 'umkm', $umkm->id, 'ktp_pemilik');
 
             return $user;
         });

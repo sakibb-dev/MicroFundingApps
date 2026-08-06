@@ -29,6 +29,8 @@ class Umkm extends Model
             'omzet_bulanan' => 'integer',
             'persen_bagi_hasil' => 'decimal:2',
             'status' => UmkmStatus::class,
+            'bank' => 'encrypted',
+            'no_rekening' => 'encrypted',
         ];
     }
 

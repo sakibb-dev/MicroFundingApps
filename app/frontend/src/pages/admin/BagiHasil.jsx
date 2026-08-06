@@ -1,9 +1,15 @@
 import { useState } from 'react';
 import { IconCurrencyDollar, IconDownload } from '@tabler/icons-react';
-import { Card, Chip, TextArea, Button, Badge, Table, Th, Td, ConfirmDialog, EmptyState, SkeletonTable } from '../../components/ui';
+import { Card, Chip, TextArea, Button, Badge, Table, Th, Td, ConfirmDialog, EmptyState, SkeletonTable, SkeletonList, CopyButton, Pagination } from '../../components/ui';
 import { formatCurrency, formatPeriode } from '../../utils/format';
-import { useAdminProfitReportList, useApproveProfitReport, useRejectProfitReport } from '../../api/admin';
+import { useAdminProfitReportList, useProfitReportDetail, useApproveProfitReport, useRejectProfitReport } from '../../api/admin';
 import { useToast } from '../../context/ToastContext';
+
+const DISTRIBUSI_STATUS_BADGE = {
+  pending: { variant: 'warning', label: 'Pending' },
+  processed: { variant: 'success', label: 'Cair' },
+  failed: { variant: 'danger', label: 'Gagal' },
+};
 
 const STATUS_BADGE = {
   submitted: { variant: 'warning', label: 'Pending' },
@@ -23,11 +29,18 @@ const FILTERS = [
 export default function BagiHasil() {
   const toast = useToast();
   const [filter, setFilter] = useState('submitted');
-  const { data, isLoading } = useAdminProfitReportList(filter);
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useAdminProfitReportList(filter, page);
   const approveReport = useApproveProfitReport();
   const rejectReport = useRejectProfitReport();
 
-  const items = data || [];
+  const items = data?.items || [];
+
+  function handleFilterChange(key) {
+    setFilter(key);
+    setPage(1);
+  }
+
   const [selectedId, setSelectedId] = useState(null);
   const [rejecting, setRejecting] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -35,6 +48,7 @@ export default function BagiHasil() {
   const [rejectConfirmOpen, setRejectConfirmOpen] = useState(false);
 
   const selected = items.find((i) => i.id === selectedId) || null;
+  const { data: detail, isLoading: detailLoading } = useProfitReportDetail(selectedId);
   const submitting = approveReport.isPending || rejectReport.isPending;
 
   function openReview(id) {
@@ -87,9 +101,9 @@ export default function BagiHasil() {
 
       <div className="flex flex-wrap gap-1.5 mb-4">
         {FILTERS.map((f) => (
-          <Chip key={f.key} tone="teal" active={filter === f.key} onClick={() => setFilter(f.key)}>
+          <Chip key={f.key} tone="teal" active={filter === f.key} onClick={() => handleFilterChange(f.key)}>
             {f.label}
-            {f.key === 'submitted' && filter === 'submitted' ? ` (${items.length})` : ''}
+            {f.key === 'submitted' && filter === 'submitted' ? ` (${data?.meta?.total ?? 0})` : ''}
           </Chip>
         ))}
       </div>
@@ -148,6 +162,7 @@ export default function BagiHasil() {
             </Table>
           )}
         </div>
+        <Pagination meta={data?.meta} onPageChange={setPage} />
       </Card>
 
       {selected && (
@@ -182,6 +197,60 @@ export default function BagiHasil() {
           >
             <IconDownload size={14} aria-hidden="true" /> Lihat Laporan Keuangan (download)
           </button>
+
+          {detail?.umkm?.rekening?.bank && (
+            <div className="bg-neutral-50 rounded-lg px-3.5 py-3 mb-3.5">
+              <div className="text-[11px] text-neutral-500 mb-1">Rekening penerima dana dari UMKM (untuk verifikasi transfer masuk)</div>
+              <div className="flex items-center gap-1.5 text-[13px] font-semibold text-neutral-900">
+                {detail.umkm.rekening.bank} · {detail.umkm.rekening.no_rekening}
+                <CopyButton value={detail.umkm.rekening.no_rekening} />
+              </div>
+            </div>
+          )}
+
+          <div className="text-[13px] font-bold text-neutral-900 mb-2.5">Distribusi ke Investor</div>
+          {detailLoading ? (
+            <SkeletonList rows={2} />
+          ) : (
+            <Table className="mb-3.5">
+              <thead>
+                <tr>
+                  <Th>Investor</Th>
+                  <Th>Rekening</Th>
+                  <Th>%</Th>
+                  <Th>Net Diterima</Th>
+                  <Th>Status</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {(detail?.distribusi || []).map((d) => {
+                  const dBadge = DISTRIBUSI_STATUS_BADGE[d.status] || DISTRIBUSI_STATUS_BADGE.pending;
+                  return (
+                    <tr key={d.id}>
+                      <Td className="font-medium text-neutral-900">{d.investor_nama}</Td>
+                      <Td>
+                        {d.rekening?.bank ? (
+                          <div className="flex items-center gap-1 whitespace-nowrap">
+                            {d.rekening.bank} · {d.rekening.no_rekening}
+                            <CopyButton value={d.rekening.no_rekening} />
+                          </div>
+                        ) : (
+                          <span className="text-neutral-400">Belum diisi</span>
+                        )}
+                      </Td>
+                      <Td>{d.persen_kepemilikan}%</Td>
+                      <Td className="whitespace-nowrap">{formatCurrency(d.nominal_bagi_hasil)}</Td>
+                      <Td>
+                        <Badge variant={dBadge.variant} tone="teal">
+                          {dBadge.label}
+                        </Badge>
+                      </Td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </Table>
+          )}
 
           {selected.status === 'submitted' ? (
             <>
